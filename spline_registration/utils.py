@@ -18,11 +18,13 @@ def create_results_dir(experiment_name):
     os.makedirs(path, exist_ok=True)
     return path
 
-def visualize_side_by_side(image_left, image_right):
+def visualize_side_by_side(image_left, image_right, title=None):
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.imshow(image_left)
     plt.subplot(1, 2, 2)
     plt.imshow(image_right)
+    if title:
+        plt.title(title)
     plt.show()
     plt.close()

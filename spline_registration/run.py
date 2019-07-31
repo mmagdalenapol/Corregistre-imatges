@@ -24,8 +24,9 @@ if __name__ == '__main__':
         transform.find_best_transform(reference_image=ref_img, input_image=inp_img)
 
         log.info('Visualize the results')
-        trn_img = transform.apply_transform(inp_img)
-        visualize_side_by_side(ref_img, trn_img)
+        tfd_img = transform.apply_transform(inp_img)
+        error = always_return_zero(reference_image=ref_img, transformed_image=tfd_img)
+        visualize_side_by_side(ref_img, tfd_img, title=f'Error: ')
 
         log.info('Store the results')
         # ...

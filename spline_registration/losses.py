@@ -1,10 +1,4 @@
 
 
-def always_return_zero(original_image, transformed_image):
+def always_return_zero(reference_image, transformed_image):
     return 0
-
-
-def mse(original_image, transformed_image):
-    """"""
-    raise NotImplementedError
-
