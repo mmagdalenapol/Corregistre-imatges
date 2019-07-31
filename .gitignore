@@ -1,3 +1,6 @@
 
 .idea/
-spline_registration/databases
+spline_registration/databases/*
+!spline_registration/databases/anhir_test
+spline_registration/results/*
+
