@@ -16,3 +16,7 @@ def dim (imatge):
 
     pixel_vermell = reference_image[0][0][0]
     reference_image - transformed_image
+
+path_reference = f'{get_databases_path()}/anhir_test/S2.jpg'
+reference_image = imread(path_reference)
+SSD(reference_image, reference_image)
