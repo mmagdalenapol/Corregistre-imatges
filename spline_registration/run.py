@@ -5,7 +5,6 @@ from spline_registration.losses import always_return_zero
 from spline_registration.transform_models import DoNothingTransform
 from spline_registration.utils import create_results_dir, visualize_side_by_side
 
-from spline_registration.proves import SSD
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
