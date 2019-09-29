@@ -1,5 +1,5 @@
 from skimage.io import imread
-
+from skimage import io
 from spline_registration.utils import get_databases_path
 
 
@@ -12,4 +12,7 @@ def anhir_test():
         'name': 'Test Image 01',
         'expert_information': None,
     }
+
+
+
 
