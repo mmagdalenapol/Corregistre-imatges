@@ -83,7 +83,7 @@ ax1.imshow(linear1, cmap='gray');
 from skimage.io import imread
 from spline_registration.utils import get_databases_path
 
-imatgefar=imread('/Users/mariamagdalenapolpujadas/Desktop/Desktop/universitat/tfg/GITHUB/tutorials/far.png')
+imatgefar=imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/tutorials/far.png')
 
 #enumerate
 

@@ -18,3 +18,4 @@ ic = io.ImageCollection(f'{get_databases_path()}/COAD01/*.jpg')#així carregam t
 #mostram per pantalla els noms d'on estan guardades les imatges
 for i in range (0,len(ic)):
     print(ic.files[i])
+

@@ -6,10 +6,10 @@ def always_return_zero(reference_image, transformed_image):
 
 def SSD(reference_image, transformed_image):
 
-    N = reference_image.size
+    N = reference_image.shape[0]
     a = reference_image-transformed_image
 
-    SSD = np.sum (a * a) / N
+    SSD = np.sum(a * a) / N
 
     return SSD
 
