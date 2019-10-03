@@ -57,11 +57,11 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
     carpeta = llista_de_dades[contingut_carpeta_inici.index(nomcarpeta)]#com llegeix les carpetes en un ordre extrany així localitzam les fotos d'una determinada carpeta
     for imatge in carpeta:
         if imatge.find(nomimatge)>=0:
-            print('la imatge' , nomimatge , 'de la carpeta' , nomcarpeta , 'es troba a la direcció:' ,  imatge )
+            print('la imatge' , nomimatge , ' de la carpeta ' , nomcarpeta , 'es troba a la direcció:' ,  imatge )
             return imatge
-        else:
-            return {'no hi ha cap imatge amb el nom' + nomimatge + 'a la carpeta' + nomcarpeta }
 
+
+    return {'no hi ha cap imatge amb el nom ' + nomimatge + ' a la carpeta ' + nomcarpeta }
 
     #aquest for tenc un exemple de com ficar a un yield text i el valor d'alguna variable.
     #for i in range(0,5):
