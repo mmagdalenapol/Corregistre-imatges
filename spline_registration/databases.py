@@ -32,7 +32,7 @@ def anhir():
         j=-1
 
         while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
-            x=os.listdir(direccio)#llegeix sa carpeta des des darrer cap es primer arxiu
+            x=os.listdir(direccio)#llegeix sa carpeta de manera rara no entenc es criteri que segueix
             for element in x:
                 if mirar_carpeta(direccio+'/'+element) == False:  # així guardam tan sols les direccions de les imatges i no les de subcarpetes.
                     l.append(direccio+'/'+element)
@@ -50,9 +50,17 @@ def anhir():
    #ara per cada subcarpeta trobada hauré de mirar dedins i així fins que arribi a que ja no es una carpeta que per tant serà una imatge i
     #guardaré la seva direcció de manera que després hi pugui accedir
 
+def cerca_imatge_ahir(llista_de_dades, nomcarpeta, nomimatge):
 
-
-
+    carpeta_inici = base_path('databases/anhir/dataset_medium')
+    contingut_carpeta_inici = os.listdir(carpeta_inici)
+    carpeta = llista_de_dades[contingut_carpeta_inici.index(nomcarpeta)]#com llegeix les carpetes en un ordre extrany així localitzam les fotos d'una determinada carpeta
+    for imatge in carpeta:
+        if imatge.find(nomimatge)>=0:
+            print('la imatge' , nomimatge , 'de la carpeta' , nomcarpeta , 'es troba a la direcció:' ,  imatge )
+            return imatge
+        else:
+            return {'no hi ha cap imatge amb el nom' + nomimatge + 'a la carpeta' + nomcarpeta }
 
 
     #aquest for tenc un exemple de com ficar a un yield text i el valor d'alguna variable.
