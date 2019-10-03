@@ -28,16 +28,17 @@ def anhir():
     for subcarpeta in contingut_carpeta_inici:
         i=i+1
         l = []
-        direccio=carpeta_inici + '/' + subcarpeta
+        direccio0=carpeta_inici + '/' + subcarpeta
         j=-1
 
-        while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
-            x=os.listdir(direccio)#llegeix sa carpeta de manera rara no entenc es criteri que segueix
+        while mirar_carpeta(direccio0) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
+            x=os.listdir(direccio0)#llegeix sa carpeta de manera rara no entenc es criteri que segueix
             for element in x:
+                direccio = direccio0
                 if mirar_carpeta(direccio+'/'+element) == False:  # així guardam tan sols les direccions de les imatges i no les de subcarpetes.
                     l.append(direccio+'/'+element)
                     j = j + 1
-                    #direccio = l[j]
+                    direccio0 = l[j]
                 else:
                     direccio = direccio+'/'+element
 
