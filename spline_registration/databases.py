@@ -40,7 +40,7 @@ def anhir():
                     j = j + 1
                     direccio0 = l[j]
                 else:
-                    direccio = direccio+'/'+element
+                    direccio0 = direccio+'/'+element
 
 
         direccions.append(l)
