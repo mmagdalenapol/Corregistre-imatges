@@ -50,7 +50,7 @@ def anhir():
    #ara per cada subcarpeta trobada hauré de mirar dedins i així fins que arribi a que ja no es una carpeta que per tant serà una imatge i
     #guardaré la seva direcció de manera que després hi pugui accedir
 
-def cerca_imatge_ahir(llista_de_dades, nomcarpeta, nomimatge):
+def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
 
     carpeta_inici = base_path('databases/anhir/dataset_medium')
     contingut_carpeta_inici = os.listdir(carpeta_inici)
