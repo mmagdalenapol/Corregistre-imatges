@@ -37,7 +37,7 @@ def anhir():
                 if mirar_carpeta(direccio+'/'+element) == False:  # així guardam tan sols les direccions de les imatges i no les de subcarpetes.
                     l.append(direccio+'/'+element)
                     j = j + 1
-                    direccio = l[j]
+                    #direccio = l[j]
                 else:
                     direccio = direccio+'/'+element
 
