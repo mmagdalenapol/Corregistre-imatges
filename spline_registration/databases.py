@@ -31,18 +31,18 @@ def anhir():
         direccio=carpeta_inici + '/' + subcarpeta
         j=-1
 
-        while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i aquesta comanda
-            x=os.listdir(direccio)
+        while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
+            x=os.listdir(direccio)#llegeix sa carpeta des des darrer cap es primer arxiu
             for element in x:
                 l.append(direccio+'/'+element)
              #ara a l tenim els path de de totes les subcarpetes de x i ara hem de mirar dins elles
             j=j+1
-            direccio= l[j]
+            direccio = l[j]
 
-        direccions.append(l)
+        if mirar_carpeta(l[j])== False:#així guardam tan sols les direccions de les imatges i no les de subcarpetes.
+            direccions.append(l)
 
     return direccions
-
 
 
    #ara per cada subcarpeta trobada hauré de mirar dedins i així fins que arribi a que ja no es una carpeta que per tant serà una imatge i
