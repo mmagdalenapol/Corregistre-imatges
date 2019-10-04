@@ -26,7 +26,7 @@ def anhir():
     direccions = []
     for subcarpeta in contingut_carpeta_inici:
         l = []
-        direccio =c arpeta_inici + '/' + subcarpeta
+        direccio =carpeta_inici + '/' + subcarpeta
         j = -1
 
         while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
