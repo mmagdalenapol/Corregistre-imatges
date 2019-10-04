@@ -22,14 +22,12 @@ def mirar_carpeta(pathcarpeta):
 
 def anhir():
     carpeta_inici = base_path('databases/anhir/dataset_medium')
-    contingut_carpeta_inici=os.listdir(carpeta_inici)#llista de les carpetes i arxius que hi ha dins la nostra carpeta d'inici
-    direccions=[]
-    i=-1
+    contingut_carpeta_inici = os.listdir(carpeta_inici)#llista de les carpetes i arxius que hi ha dins la nostra carpeta d'inici
+    direccions = []
     for subcarpeta in contingut_carpeta_inici:
-        i=i+1
         l = []
-        direccio=carpeta_inici + '/' + subcarpeta
-        j=-1
+        direccio =c arpeta_inici + '/' + subcarpeta
+        j = -1
 
         while mirar_carpeta(direccio) == True:# Si és una carpeta haurem de seguir cercant dins la carpeta i amb aquesta comanda ho feim
             x=os.listdir(direccio)#llegeix sa carpeta de manera rara no entenc es criteri que segueix
@@ -42,7 +40,7 @@ def anhir():
                 else:
                     direccio = direccio+'/'+element
 
-        direccio = direccio + '/' + element
+       # direccio = direccio + '/' + element
         direccions.append(l)
 
     return direccions
@@ -58,11 +56,11 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
     carpeta = llista_de_dades[contingut_carpeta_inici.index(nomcarpeta)]#com llegeix les carpetes en un ordre extrany així localitzam les fotos d'una determinada carpeta
     for imatge in carpeta:
         if imatge.find(nomimatge)>=0:
-            print('la imatge' , nomimatge , ' de la carpeta ' , nomcarpeta , 'es troba a la direcció:' ,  imatge )
+            print('la imatge ' , nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
             return imatge
 
 
-    return {'no hi ha cap imatge amb el nom ' + nomimatge + ' a la carpeta ' + nomcarpeta }
+    return {' no hi ha cap imatge amb el nom ' + nomimatge + ' a la carpeta ' + nomcarpeta }
 
     #aquest for tenc un exemple de com ficar a un yield text i el valor d'alguna variable.
     #for i in range(0,5):
