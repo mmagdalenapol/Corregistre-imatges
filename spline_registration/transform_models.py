@@ -1,8 +1,7 @@
+from skimage.transform import resize
+
 
 class BaseTransform:
-    def __init__(self, loss_function):
-        self.loss = loss_function
-
     def find_best_transform(self, reference_image, input_image):
         raise NotImplementedError
 
@@ -13,11 +12,14 @@ class BaseTransform:
         return None
 
 
-class DoNothingTransform(BaseTransform):
+class Rescala (BaseTransform):
+    def __init__(self):
+        self.dim_imatge = None
+
     def find_best_transform(self, reference_image, input_image):
-        pass
+        self.dim_imatge = reference_image.shape
+        return resize(input_image,self.dim_imatge)
 
     def apply_transform(self, input_image):
         return input_image
-
 

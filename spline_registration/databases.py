@@ -23,8 +23,10 @@ def mirar_carpeta(pathcarpeta):
 def anhir():
     carpeta_inici = base_path('databases/anhir/dataset_medium')
     contingut_carpeta_inici = os.listdir(carpeta_inici)#llista de les carpetes i arxius que hi ha dins la nostra carpeta d'inici
-    direccions = []
-    for subcarpeta in contingut_carpeta_inici:
+    direccions = {} #cream un diccionari inicialment buit
+
+    subcarpetes_carpeta_inici = [path for path in contingut_carpeta_inici if mirar_carpeta(carpeta_inici + '/' + path)] #Guardam les que son carpetes
+    for subcarpeta in subcarpetes_carpeta_inici:
         l = []
         direccio =carpeta_inici + '/' + subcarpeta
         j = -1
@@ -40,8 +42,19 @@ def anhir():
                 else:
                     direccio = direccio+'/'+element
 
-       # direccio = direccio + '/' + element
-        direccions.append(l)
+        direccions[str(subcarpeta)] = l #al diccionari afegim una posició tal que tengui per nom el mateix nom que la subcarpeta i contengui
+        # l'array amb les direccions de totes les imatges d'aquesta carpeta.
+
+
+    for nom_carpeta, llista_imatges in direccions.items():
+        pass
+
+    for nom_carpeta in direccions.keys():
+        pass
+
+    for llista_imatges in direccions.values():
+        pass
+
 
     return direccions
 
@@ -51,9 +64,9 @@ def anhir():
 
 def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
 
-    carpeta_inici = base_path('databases/anhir/dataset_medium')
-    contingut_carpeta_inici = os.listdir(carpeta_inici)
-    carpeta = llista_de_dades[contingut_carpeta_inici.index(nomcarpeta)]#com llegeix les carpetes en un ordre extrany així localitzam les fotos d'una determinada carpeta
+    carpeta = llista_de_dades[nomcarpeta]
+    #així com llista de dades es un diccionari podem cercar pel nom d'un element i ens torna el que hi ha a n'aquella posicio
+
     for imatge in carpeta:
         if imatge.find(nomimatge)>=0:
             print('la imatge ' , nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
