@@ -38,3 +38,4 @@ print('L´error entre les imatges és:',SSD(imatge1, imatge2))
 # com podem veure les 2 imatges són semblants però de colors diferents i per aquesta raó ja ens dóna un error molt gran.
 # hem de trobar una mesura d'error millor.
 
+
