@@ -51,6 +51,19 @@ print('L´informació mútua entre les imatges de mostres diferents és:',info_m
 #informació mutua en principi va millor ja que ens dóna menor un valor major en imatges de la mateixa mostra que en imatges de mostres diferents.
 
 
-mammary-gland_2_imatge1=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_61-HE_A4926-4L.jpg'))
-mammary-gland_2_imatge2=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_62-ER_A4926-4L.jpg'))
-info_mutua(mammary-gland_2_imatge1, mammary-gland_2_imatge2)
+mammarygland_2_imatge1=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_61-HE_A4926-4L.jpg'))
+mammarygland_2_imatge2=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_62-ER_A4926-4L.jpg'))
+mammarygland_2_imatge3=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_63-HE_A4926-4L'))
+mammarygland_2_imatge2= Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,mammarygland_2_imatge2)
+mammarygland_2_imatge3= Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,mammarygland_2_imatge3)
+print('informació mutua imatge 1 amb 2:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge2),'informació mutua imatge 1 amb 3:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge3),'informació mutua imatge 2 amb 3:',info_mutua(mammarygland_2_imatge2, mammarygland_2_imatge3)
+
+
+
+#veim que la informació mutua es menor quan es tracta de imatges de mostres diferents.
+imatge_mostra_diferent = imread(cerca_imatge_anhir (anhir(),'lung-lesion_1', '29-041-Izd2-w35-Cc10-5-les1'))
+imatge_mostra_diferent = Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,imatge_mostra_diferent)
+print('informació mutua imatge 1 amb diferent:', info_mutua(mammarygland_2_imatge1, imatge_mostra_diferent),
+      'informació mutua imatge diferent amb 3:', info_mutua(imatge_mostra_diferent, mammarygland_2_imatge3),
+      'informació mutua imatge 2 amb diferent:', info_mutua(mammarygland_2_imatge2,imatge_mostra_diferent)
+      )

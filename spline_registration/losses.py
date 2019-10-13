@@ -19,6 +19,7 @@ def info_mutua(reference_image, transformed_image):
     #px i py distribucions marginals (la d'x s'obté sumant per files i la de y per columnes)
 
     histograma = np.histogram2d(reference_image.ravel(), transformed_image.ravel())
+    #plt.imshow(histograma[0],origin='lower') si volguessim dibuixar l'histograma
     pxy = histograma[0]/np.sum(histograma[0])
     px = pxy.sum(axis=1)#sumes els elements de la mateixa fila obtenim un array
     py = pxy.sum(axis=0)#sumes els elements de la mateixa columna
