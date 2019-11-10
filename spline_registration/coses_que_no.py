@@ -1,4 +1,4 @@
-#funcio per imatges en dues dimensions RGB
+#funcio per imatges en dues dimensions RGB no ho hem de fer així perquè tarda un muunt
 
 #volem descomposar els colors d'una imatge agrupant els R,G,B en n invervals (normalment 5 o 10, així hi hauria 125 0 1000 grups diferents de colors.)
 
@@ -30,17 +30,27 @@ def descomposar(imatge,n):
                 j=j+1
     return classe_imatge
 
+def info_mutua(reference_image, transformed_image):
+    #x és la reference_imatge, y la transformed_image
+    #pxy distribucio de probabilitat conjunta
+    #px i py distribucions marginals (la d'x s'obté sumant per files i la de y per columnes)
 
+    histograma = np.histogram2d(reference_image.ravel(), transformed_image.ravel())
+    #plt.imshow(histograma[0],origin='lower') si volguessim dibuixar l'histograma
+    pxy = histograma[0]/np.sum(histograma[0])
+    px = pxy.sum(axis=1)#sumes els elements de la mateixa fila obtenim un array
+    py = pxy.sum(axis=0)#sumes els elements de la mateixa columna
 
-##ara la funció que fa bàsicament el mateix però molt més senzill:
+    #els pxy que siguin 0 no les tenim en compte ja que no aporten res
+    # a la informació mutua i el log de 0 no està definit
 
-def descomposar (imatge,n):
+    info_mutua = 0
+    for i in range(0, pxy.shape[0]):
+        for j in range(0, pxy.shape[1]):
+            if pxy[i, j] != 0:
+                info_mutua = info_mutua + pxy[i, j] * np.log(pxy[i, j] / (px[i] * py[j]))
 
+    return info_mutua
 
-    imatge = (imatge - imatge.min())/(imatge.max()-imatge.min()) #aixi tots els valors de la imatge van entre 0 i 1
-
-    imatge = np.floor_divide(imatge, 1/n) #ara cada valor de la imatge és la seva classe.
-
-    return imatge
-
-
+#m'he basat amb https://matthew-brett.github.io/teaching/mutual_information.html per la informacio mutua
+#com major és el nombre que ens torna menor és l'error entre les imatges
