@@ -1,46 +1,33 @@
-from skimage.io import imread
-import numpy as np
-from matplotlib import pyplot as plt
-from skimage import data
-cat = data.chelsea()
-rangcolors=np.linspace(cat[:,:].min(),cat[:,:].max(),10)
-print(rangcolors,cat.shape)
-rangR= np.ones((cat.shape))
-rangG= np.ones((cat.shape))
-rangB= np.ones((cat.shape))
-for fila in range (0,cat.shape[0]):
-    for columna in range (0,cat.shape[1]):
-       #per R
-        a = rangcolors-cat[fila,columna][0]
-        for i in range (0,len(a)):
-            if a[i] >= 0 :
-                if i==0:
-                    rangR[fila,columna] = [rangcolors[i],0,0]
-                    i=len(a)+1
-                else:
-                    if a[i-1]<0:
-                        rangR[fila, columna] = [rangcolors[i-1], 0, 0]
-                        i = len(a) + 1
+#funcio per imatges en dues dimensions RGB
 
-         # per G
-        a = rangcolors - cat[fila, columna][1]
-        for i in range(0, len(a)):
-            if a[i] >= 0:
-                if i == 0:
-                    rangG[fila, columna] = [0, rangcolors[i], 0]
-                    i = len(a) + 1
-                else:
-                    if a[i - 1] < 0:
-                        rangG[fila, columna] = [0, rangcolors[i-1 ], 0]
-                        i = len(a) + 1
-        # per B
-        a = +rangcolors - cat[fila, columna][2]
-        for i in range(0, len(a)):
-            if a[i] >= 0:
-                if i == 0:
-                    rangB[fila, columna] = [0, 0, rangcolors[i]]
-                    i = len(a) + 1
-                else:
-                    if a[i - 1] < 0:
-                        rangB[fila, columna] = [0, 0, rangcolors[i-1]]
-                        i = len(a) + 1
+#volem descomposar els colors d'una imatge agrupant els R,G,B en n invervals (normalment 5 o 10, així hi hauria 125 0 1000 grups diferents de colors.)
+
+#introduim per paràmetre la imatge i n
+
+def descomposar(imatge,n):
+    files = imatge.shape[0]
+    columnes = imatge.shape[1]
+    rangcolors = np.linspace(imatge[:, :].min(), imatge[:, :].max(), n)
+    classe_imatge = np.ones((imatge.shape)) #aqui guardam cada pixel a quin grup pertany
+    for fila in range(0, files):
+        for columna in range(0, columnes):
+            color = imatge[fila,columna] #cada pixel està format per un array amb tres nombres R,G,B
+            j=0 #contador de l'index R G B
+            for col in color:
+                a = rangcolors - col
+                i=0
+                while i in range(0, len(a)):
+                    if a[i] >= 0: #ens interessa que la diferència sigui positiva i aixó pertany a aquest grup
+                        if i == 0:
+                            classe_imatge[fila, columna][j] = rangcolors[i]
+                            i = len(a)
+                        else:
+                            if a[i - 1] < 0:
+                                classe_imatge[fila, columna][j] = rangcolors[i - 1]
+                                i = len(a)
+
+                    else:
+                        i=i+1
+                j=j+1
+    return classe_imatge
+
