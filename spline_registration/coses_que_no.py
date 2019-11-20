@@ -54,3 +54,48 @@ def info_mutua(reference_image, transformed_image):
 
 #m'he basat amb https://matthew-brett.github.io/teaching/mutual_information.html per la informacio mutua
 #com major és el nombre que ens torna menor és l'error entre les imatges
+
+
+
+
+#sa meva intenció es contar el nombre de vegades que surt cada element .
+valors = [imatge[0,0]]
+nobs = [np.count_nonzero( np.sum( (np.where(imatge ==imatge[0,0], 1, 0)),axis=2) == 3 )]
+
+for n in valors:
+
+   if  np.any(np.floor_divide(imatge, valors[0])!=[0.,0.,0.]):
+       valor= imatge[
+           np.where(np.floor_divide(imatge, valors[0]) != [0., 0., 0.])[0][0],
+           np.where(np.floor_divide(imatge, valors[0]) != [0., 0., 0.])[1][0],
+           np.where(np.floor_divide(imatge, valors[0]) != [0., 0., 0.])[2][0]]
+
+       valors.append( valor)
+       nobs.append(np.count_nonzero( np.sum( (np.where(imatge ==valor, 1, 0)),axis=2) == 3 ))
+
+
+
+valors = [imatge[0,0]]
+imatge2 =np.sum( (np.where(imatge ==imatge[0,0], 1, 0)),axis=2) == 3
+nobs=[np.count_nonzero(imatge2)]
+indexx=np.where(imatge2 == True)[0]
+indexy=np.where(imatge2 == True)[1]
+
+for x in range (0, imatge.shape[0]):
+    for y in range (0, imatge.shape[1]):
+        if x in indexx and y not in indexy[np.where(indexx ==x)]:
+            valor = imatge[x,y]
+            imatge2 =np.sum( (np.where(imatge ==valor, 1, 0)),axis=2) == 3
+            np.append(nobs,np.count_nonzero(imatge2))
+            np.append(indexx,np.where(imatge2 == True)[0])
+            np.append(indexy,np.where(imatge2 == True)[1])
+
+        if x not in indexx:
+            valor = imatge[x, y]
+            imatge2 = np.sum((np.where(imatge == valor, 1, 0)), axis=2) == 3
+            np.append(nobs, np.count_nonzero(imatge2))
+            np.append(indexx, np.where(imatge2 == True)[0])
+            np.append(indexy, np.where(imatge2 == True)[1])
+
+
+

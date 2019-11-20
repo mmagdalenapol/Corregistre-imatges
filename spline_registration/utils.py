@@ -30,7 +30,7 @@ def visualize_side_by_side(image_left, image_right, title=None):
     plt.close()
 
 def descomposar (imatge,n):
-
+    import numpy as np
     imatge = (imatge - imatge.min())/(imatge.max()-imatge.min()) #aixi tots els valors de la imatge van entre 0 i 1
     imatge = np.floor_divide(imatge, 1/n) #ara cada valor de la imatge és la seva classe.
 

@@ -13,13 +13,27 @@ def SSD(reference_image, transformed_image):
 
     return SSD
 
-def info_mutua(reference_image, transformed_image):
+def info_mutua(reference_image, transformed_image,n):
     #x és la reference_imatge, y la transformed_image
     #pxy distribucio de probabilitat conjunta
     #px i py distribucions marginals (la d'x s'obté sumant per files i la de y per columnes)
 
-    histograma = np.histogram2d(reference_image.ravel(), transformed_image.ravel())
-    #plt.imshow(histograma[0],origin='lower') si volguessim dibuixar l'histograma
+
+    from spline_registration.utils import descomposar
+    imatge1d = descomposar(reference_image, n)
+    imatge2d = descomposar(transformed_image, n)
+
+    files = imatge1d.shape[0]
+    columnes = imatge1d.shape[1]
+    imatge1d = imatge1d.ravel()
+    imatge2d = imatge2d.ravel()
+
+    imatge1d = imatge1d.reshape(files * columnes, 3)
+    imatge2d = imatge2d.reshape(files * columnes, 3)
+    IMATGE1 = imatge1d[:, 0] * n + imatge1d[:, 1] + n * n * imatge1d[:, 2]
+    IMATGE2 = imatge2d[:, 0] * n + imatge2d[:, 1] + n * n * imatge2d[:, 2]
+    histograma = np.histogram2d(IMATGE1, IMATGE2, bins=n)
+
     pxy = histograma[0]/np.sum(histograma[0])
     px = pxy.sum(axis=1)#sumes els elements de la mateixa fila obtenim un array
     py = pxy.sum(axis=0)#sumes els elements de la mateixa columna

@@ -56,14 +56,35 @@ mammarygland_2_imatge2=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2
 mammarygland_2_imatge3=imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_63-HE_A4926-4L'))
 mammarygland_2_imatge2= Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,mammarygland_2_imatge2)
 mammarygland_2_imatge3= Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,mammarygland_2_imatge3)
-print('informació mutua imatge 1 amb 2:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge2),'informació mutua imatge 1 amb 3:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge3),'informació mutua imatge 2 amb 3:',info_mutua(mammarygland_2_imatge2, mammarygland_2_imatge3)
+print('informació mutua imatge 1 amb 2:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge2),'informació mutua imatge 1 amb 3:',info_mutua(mammarygland_2_imatge1, mammarygland_2_imatge3),'informació mutua imatge 2 amb 3:',info_mutua(mammarygland_2_imatge2, mammarygland_2_imatge3))
 
 
 
 #veim que la informació mutua es menor quan es tracta de imatges de mostres diferents.
-imatge_mostra_diferent = imread(cerca_imatge_anhir (anhir(),'lung-lesion_1', '29-041-Izd2-w35-Cc10-5-les1'))
-imatge_mostra_diferent = Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,imatge_mostra_diferent)
+imatge_mostra_diferent= imread(cerca_imatge_anhir (anhir(),'lung-lesion_1', '29-041-Izd2-w35-Cc10-5-les1'))
+imatge_mostra_diferent= Rescala.find_best_transform(Rescala(),mammarygland_2_imatge1,imatge_mostra_diferent)
 print('informació mutua imatge 1 amb diferent:', info_mutua(mammarygland_2_imatge1, imatge_mostra_diferent),
       'informació mutua imatge diferent amb 3:', info_mutua(imatge_mostra_diferent, mammarygland_2_imatge3),
       'informació mutua imatge 2 amb diferent:', info_mutua(mammarygland_2_imatge2,imatge_mostra_diferent)
       )
+
+
+
+
+
+n=5
+imatge1d=descomposar(imatge1,n)
+imatge2d=descomposar(imatge2,n)
+
+files=imatge1d.shape[0]
+columnes=imatge1d.shape[1]
+imatge1d=imatge1d.ravel()
+imatge2d=imatge2d.ravel()
+
+imatge1d=imatge1d.reshape(files*columnes,3)
+imatge2d=imatge2d.reshape(files*columnes,3)
+
+IMATGE1=imatge1d[:,0]*n+imatge1d[:,1]+n*n*imatge1d[:,2]
+IMATGE2=imatge2d[:,0]*n+imatge2d[:,1]+n*n*imatge2d[:,2]
+histograma = np.histogram2d(IMATGE1, IMATGE2,bins=n)
+
