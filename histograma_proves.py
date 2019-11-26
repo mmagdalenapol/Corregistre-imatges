@@ -77,3 +77,4 @@ print('la informacio mutua de 2 imatges de la mateixa mostra:',info_mutua(imatge
 
 print('la informacio mutua de 2 imatges de mostres diferents:',info_mutua(imatge1, imatge_mostra_diferent,5))
 
+print('la informacio mutua de 2 imatges de la mateixa mostra:',info_mutua(imatge1, imatge1,5))

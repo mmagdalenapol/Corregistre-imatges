@@ -70,21 +70,3 @@ print('informació mutua imatge 1 amb diferent:', info_mutua(mammarygland_2_imat
 
 
 
-
-
-n=5
-imatge1d=descomposar(imatge1,n)
-imatge2d=descomposar(imatge2,n)
-
-files=imatge1d.shape[0]
-columnes=imatge1d.shape[1]
-imatge1d=imatge1d.ravel()
-imatge2d=imatge2d.ravel()
-
-imatge1d=imatge1d.reshape(files*columnes,3)
-imatge2d=imatge2d.reshape(files*columnes,3)
-
-IMATGE1=imatge1d[:,0]*n+imatge1d[:,1]+n*n*imatge1d[:,2]
-IMATGE2=imatge2d[:,0]*n+imatge2d[:,1]+n*n*imatge2d[:,2]
-histograma = np.histogram2d(IMATGE1, IMATGE2,bins=n)
-

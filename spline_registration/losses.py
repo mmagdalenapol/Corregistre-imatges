@@ -20,19 +20,10 @@ def info_mutua(reference_image, transformed_image,n):
 
 
     from spline_registration.utils import descomposar
-    imatge1d = descomposar(reference_image, n)
-    imatge2d = descomposar(transformed_image, n)
+    imatge1 = descomposar(reference_image, n)
+    imatge2 = descomposar(transformed_image, n)
 
-    files = imatge1d.shape[0]
-    columnes = imatge1d.shape[1]
-    imatge1d = imatge1d.ravel()
-    imatge2d = imatge2d.ravel()
-
-    imatge1d = imatge1d.reshape(files * columnes, 3)
-    imatge2d = imatge2d.reshape(files * columnes, 3)
-    IMATGE1 = imatge1d[:, 0] * n + imatge1d[:, 1] + n * n * imatge1d[:, 2]
-    IMATGE2 = imatge2d[:, 0] * n + imatge2d[:, 1] + n * n * imatge2d[:, 2]
-    histograma = np.histogram2d(IMATGE1, IMATGE2, bins=n)
+    histograma = np.histogram2d(imatge1, imatge2,bins=(n-1)*(1+n+n*n))
 
     pxy = histograma[0]/np.sum(histograma[0])
     px = pxy.sum(axis=1)#sumes els elements de la mateixa fila obtenim un array

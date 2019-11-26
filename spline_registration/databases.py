@@ -69,7 +69,7 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
 
     for imatge in carpeta:
         if imatge.find(nomimatge)>=0:
-            print('la imatge ' , nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
+            #print('la imatge ' , nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
             return imatge
 
 
