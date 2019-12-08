@@ -70,3 +70,69 @@ print('informació mutua imatge 1 amb diferent:', info_mutua(mammarygland_2_imat
 
 
 
+
+#30 de novemdre 2019 al 8 de desembre
+import numpy as np
+a=np.array([0.2,3])
+b=np.array([1.9,9.2])
+c=np.array([6.2,5.9])
+d=np.array([1,7.8])
+e=np.array([8,4.3])
+f=np.array([19.1,3.21])
+
+A=np.array([np.array([a,b]),np.array([c,d])])
+columna1=A[:,:,0]
+columna2=A[:,:,1]
+A21=np.floor(A)
+A12=np.ceil(A)
+A11=np.ones(A.shape)
+A11[:,:,0]=np.floor(columna1)
+A11[:,:,1]=np.ceil(columna2)
+A22=np.ones(A.shape)
+A22[:,:,0]=np.ceil(columna1)
+A22[:,:,1]=np.floor(columna2)
+
+from spline_registration.utils import imatge_vec
+A=imatge_vec(A,2)
+A11=imatge_vec(A11,2).astype(int)
+A12=imatge_vec(A12,2).astype(int)
+A21=imatge_vec(A21,2).astype(int)
+A22=imatge_vec(A22,2).astype(int)
+
+
+#ara si d'una matriu, per exemple la imatge coins, en volem els valors que estan en les posicions A11 feim:
+
+from skimage import data
+coins = data.coins()
+coins[A11[:,0],A11[:,1]]
+
+#SI TOT FOSSIN NO ENTERS FUNCIONA:
+f11 = (1-(-A11[:,0]+A[:,0])*(A11[:,1]-A[:,1]))/3
+f12 = (1-(A12[:,0]-A[:,0])*(A12[:,1]-A[:,1]))/3
+f21 = (1-(-A21[:,0]+A[:,0])*(-A21[:,1]+A[:,1]))/3
+f22 = (1-(A22[:,0]-A[:,0])*(-A22[:,1]+A[:,1]))/3
+
+#np.where(A11[:,1]==A[:,1])#posicions on les columnes són enters
+#np.where(A11[:,0]==A[:,0])#posicions on les files són enters.
+#al cas que no tots son enters hem de canviar determinades posicions de les fij
+
+#canviam les fij de les posicions on les COLUMNES són enters:
+f11[np.where(A11[:,1]==A[:,1])] = (1-(-A11[:,0]+A[:,0]))[np.where(A11[:,1]==A[:,1])]
+f12[np.where(A11[:,1]==A[:,1])] = (1-(A12[:,0]-A[:,0]))[np.where(A11[:,1]==A[:,1])]
+f21[np.where(A11[:,1]==A[:,1])] = 0
+f22[np.where(A11[:,1]==A[:,1])] = 0
+
+
+#canviam les fij de les posicions on les FILES són enters:
+f11[np.where(A11[:,0]==A[:,0])] = (1-(A11[:,1]-A[:,1]))[np.where(A11[:,0]==A[:,0])]
+f12[np.where(A11[:,0]==A[:,0])] = 0
+f21[np.where(A11[:,0]==A[:,0])] = (1-(-A21[:,1]+A[:,1]))[np.where(A11[:,0]==A[:,0])]
+f22[np.where(A11[:,0]==A[:,0])] = 0
+
+#si tant files com columnes són enters:
+f11[np.where(np.sum(A11==A,axis=1)==2)] = 1
+f12[np.where(np.sum(A11==A,axis=1)==2)] = 0
+f21[np.where(np.sum(A11==A,axis=1)==2)] = 0
+f22[np.where(np.sum(A11==A,axis=1)==2)] = 0
+
+B=(f11*coins[A11[:,0],A11[:,1]]+f12*coins[A12[:,0],A12[:,1]]+f21*coins[A21[:,0],A21[:,1]]+f22*coins[A22[:,0],A22[:,1]])

@@ -27,4 +27,4 @@ print('informació mutua imatge 1 amb diferent:', info_mutua(imatge1, imatge_mos
       'informació mutua imatge 2 amb diferent:', info_mutua(imatge2,imatge_mostra_diferent,n)
       )
 
-print('una imatge amb ella mateixa te una info mutua molt més gran'info_mutua(imatge1, imatge1,n))
+print('una imatge amb ella mateixa te una info mutua molt més gran',info_mutua(imatge1, imatge1,n))

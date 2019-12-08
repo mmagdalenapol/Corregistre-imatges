@@ -23,7 +23,7 @@ def info_mutua(reference_image, transformed_image,n):
     imatge1 = descomposar(reference_image, n)
     imatge2 = descomposar(transformed_image, n)
 
-    histograma = np.histogram2d(imatge1, imatge2,bins=(n-1)*(1+n+n*n))
+    histograma = np.histogram2d(imatge1, imatge2,bins=n^3)
 
     pxy = histograma[0]/np.sum(histograma[0])
     px = pxy.sum(axis=1)#sumes els elements de la mateixa fila obtenim un array
