@@ -7,7 +7,7 @@ class BaseTransform:
         raise NotImplementedError
 
     def apply_transform(self, input_image):
-        return input_image
+        return imatge_vec(input_image, 2)
 
     def visualize_transform(self):
         return None
@@ -24,6 +24,8 @@ class Rescala(BaseTransform):
         return resize(input_image,self.dim_imatge)
 
 
+
+#tenc un lio considerable amb lo de ses classes!!!
 class ElasticTransform(BaseTransform):
     def __init__(self):
         self.dim_imatge = None
@@ -31,9 +33,15 @@ class ElasticTransform(BaseTransform):
 
     #no soluciona el problema de que vagi a jocs fora de la imatge
     def colors_transform(self, reference_image, input_image):
-        A = BaseTransform.apply_transform(input_image)
+        A = BaseTransform.apply_transform(BaseTransform(),input_image)
         #la transformacio m'hauria de donar les posicions d'on se suposa que ve cada pixel de la imatge corregistrada.
+        #la matriu que em dona ja es en forma de vector
         #aquests valors poden ser decimals i per aixo el valor del color depèn dels 4 parells d'enters més pròxims.
+
+
+        A = np.maximum(A, 0)  # Si ens diu que ve de posicions negatives ho posam com si vengués de la corresponent coordenada 0
+        A[:, :, 0] = np.minimum(A[:, :, 0], reference_image.shape[0] - 1)  # la coordenada x no pot ser major que les files de l'imatge de referencia
+        A[:, :, 1] = np.minimum(A[:, :, 1], reference_image.shape[1] - 1)  # la coordenada y no pot ser major que les columnes de l'imatge de referència
 
         columna1 = A[:, :, 0]
         columna2 = A[:, :, 1]
@@ -46,8 +54,8 @@ class ElasticTransform(BaseTransform):
         A22[:, :, 0] = np.ceil(columna1)
         A22[:, :, 1] = np.floor(columna2)#A22 files ceil i columnes floor
 
-        #ara ho passam a vector i els nombres a enters per poder emprarlos com indexs
-        A = imatge_vec(A, 2)
+        # i els nombres a enters per poder emprarlos com indexs
+
         A11 = imatge_vec(A11, 2).astype(int)
         A12 = imatge_vec(A12, 2).astype(int)
         A21 = imatge_vec(A21, 2).astype(int)
