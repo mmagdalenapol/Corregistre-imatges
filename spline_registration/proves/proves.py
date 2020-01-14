@@ -29,18 +29,22 @@ from spline_registration.losses import SSD
 from spline_registration.losses import info_mutua
 from spline_registration.transform_models import Rescala
 
+
 imatge1 = imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_64-PR_A4926-4L'))
 imatge2 = imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_62-ER_A4926-4L'))
-imatge2 = Rescala.find_best_transform(Rescala(),imatge1,imatge2)#rescalam la imatge 2 per tal que sigui de la mateixa dimensio que la 1
+
+transformada=Rescala()
+dim=transformada.find_best_transform(imatge1,imatge2)#dimensio de la imatge que volem reescalar
+imatge2 = transformada.apply_transform(imatge2,dim)#rescalam la imatge 2 per tal que sigui de la mateixa dimensio que la 1
 
 visualize_side_by_side(imatge1,imatge2, 'Esquerra: s2_64-PR_A4926-4L.jpg ; Dreta: s2_62-ER_A4926-4L.jpg ')
 print('L´error SSD entre les imatges de la mateixa mostra és:',SSD(imatge1, imatge2))
-print('L´informació mútua entre les imatges de la mateixa mostra és:',info_mutua(imatge1, imatge2))
+print('L´informació mútua entre les imatges de la mateixa mostra és:',info_mutua(imatge1, imatge2,5))
 # com podem veure les 2 imatges són semblants però de colors diferents i per aquesta raó ja ens dóna un error molt gran.
 # hem de trobar una mesura d'error millor.
 
 imatge_mostra_diferent = imread(cerca_imatge_anhir (anhir(),'lung-lesion_1', '29-041-Izd2-w35-Cc10-5-les1'))
-imatge_mostra_diferent = Rescala.find_best_transform(Rescala(),imatge1,imatge_mostra_diferent)
+imatge_mostra_diferent = transformada.apply_transform(imatge_mostra_diferent,dim)
 
 
 visualize_side_by_side(imatge1,imatge_mostra_diferent, 'Esquerra:mammary-gland_  ; Dreta: lung-lesion_1')
@@ -83,7 +87,7 @@ f=np.array([-19.1,3.21])
 from skimage import data
 coins = data.coins()
 
-A=np.array([np.array([a,b,c,d])])
+A=np.array([a,b,c,d])
 A=np.maximum(A,0) # Si ens diu que ve de posicions negatives ho posam com si vengués de la corresponent coordenada 0
 A[:,:,0]=np.minimum(A[:,:,0],coins.shape[0]-1) #la coordenada x no pot ser major que les files de l'imatge de referencia
 A[:,:,1]=np.minimum(A[:,:,1],coins.shape[1]-1) #la coordenada y no pot ser major que les columnes de l'imatge dereferència
@@ -139,3 +143,28 @@ f21[np.where(np.sum(A11==A,axis=1)==2)] = 0
 f22[np.where(np.sum(A11==A,axis=1)==2)] = 0
 
 B=(f11*coins[A11[:,0],A11[:,1]]+f12*coins[A12[:,0],A12[:,1]]+f21*coins[A21[:,0],A21[:,1]]+f22*coins[A22[:,0],A22[:,1]])
+
+
+#gener
+
+'''
+class BaseTransform:
+    def find_best_transform(self, reference_image, input_image):
+        raise NotImplementedError
+    def apply_transform(self, input_image):
+        raise NotImplementedError
+    def visualize_transform(self):
+        return None
+        
+class Rescala(BaseTransform):
+    def __init__(self):
+        self.dim_imatge = None
+    def find_best_transform(self, reference_image, input_image):
+        return reference_image.shape
+    def apply_transform(self, input_image,dim):
+        return resize(input_image,dim)
+        
+transformada = Rescala()
+dim =transformada.find_best_transform(imatge1, imatge2)
+imatge2rescalada= transformada.apply_transform(imatge2,dim)       
+'''

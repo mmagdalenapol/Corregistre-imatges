@@ -2,26 +2,51 @@ from skimage.transform import resize
 
 from spline_registration.utils import imatge_vec
 
+
 class BaseTransform:
     def find_best_transform(self, reference_image, input_image):
         raise NotImplementedError
 
     def apply_transform(self, input_image):
-        return imatge_vec(input_image, 2)
+        raise NotImplementedError
 
     def visualize_transform(self):
         return None
 
+'''
+class Rescala(BaseTransform):
+    def __init__(self):
+        self.dim_imatge = None
+
+    def find_best_transform(self, reference_image, input_image):
+        #self.dim_imatge = reference_image.shape
+
+    def apply_transform(self, input_image):
+        return resize(input_image,self.dim_imatge)
+
+
+transformada = Rescala()
+
+BaseTransform.apply_transform(transformada, input_image=None)
+transformada.apply_transform(None)
+
+'''
 
 class Rescala(BaseTransform):
     def __init__(self):
         self.dim_imatge = None
 
     def find_best_transform(self, reference_image, input_image):
-        self.dim_imatge = reference_image.shape
+        return reference_image.shape
 
-    def apply_transform(self, input_image):
-        return resize(input_image,self.dim_imatge)
+    def apply_transform(self, input_image, dim):
+        return resize(input_image, dim)
+
+'''
+a apply_transform no puc fer servir el resultat de find_best_transform no???
+
+'''
+
 
 
 
@@ -29,11 +54,12 @@ class Rescala(BaseTransform):
 class ElasticTransform(BaseTransform):
     def __init__(self):
         self.dim_imatge = None
+        self.A = None
 
 
     #no soluciona el problema de que vagi a jocs fora de la imatge
     def colors_transform(self, reference_image, input_image):
-        A = BaseTransform.apply_transform(BaseTransform(),input_image)
+        A = self.apply_transform(input_image)
         #la transformacio m'hauria de donar les posicions d'on se suposa que ve cada pixel de la imatge corregistrada.
         #la matriu que em dona ja es en forma de vector
         #aquests valors poden ser decimals i per aixo el valor del color depèn dels 4 parells d'enters més pròxims.
