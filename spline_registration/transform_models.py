@@ -40,6 +40,7 @@ class Rescala(BaseTransform):
         return reference_image.shape
 
     def apply_transform(self, input_image, dim):
+        self.find_best_transform()
         return resize(input_image, dim)
 
 '''

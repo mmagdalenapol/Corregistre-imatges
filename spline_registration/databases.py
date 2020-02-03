@@ -15,21 +15,19 @@ def anhir_test():
         'expert_information': None,
     }
 
-#torna vertader si es carpeta
+#si és carpeta torna vertader
 def mirar_carpeta(pathcarpeta):
     return os.path.isdir(pathcarpeta)
 '''
 Quan volem carregar les imatges el primer que hem de fer és arribar a elles.
 Per això he creat la mirar_carpeta(direccio del directori).
-hi ha una funció de la llibreria os que fa presisament això. 
+hi ha una funció de la llibreria os que fa precisament això. 
 Aquesta funció és os.path.isdir(pathcarpeta).
-Que el que fa es retorna vertader si es carpeta i fals sino.
+Que el que fa es retorna vertader si és carpeta i fals sinó.
 '''
 
 
 def anhir():
-
-
     carpeta_inici = base_path('databases/anhir/dataset_medium')
     '''
        Feim feina amb les imatges de anhir.
@@ -77,7 +75,9 @@ def anhir():
         i contengui l'array amb les direccions de totes les imatges d'aquesta carpeta.
         '''
 
-
+    '''
+    la funcio anhir ens torna el diccionari direccions que te per keys els noms de les subcarpetes i per values els paths de les imatges dins aquestes
+    '''
 
     for nom_carpeta, llista_imatges in direccions.items():
         pass
@@ -91,9 +91,6 @@ def anhir():
 
     return direccions
 
-'''
-la funcio anhir ens torna el diccionari direccions que te per keys els noms de les subcarpetes i per values els paths de les imatges dins aquestes
-'''
 
 def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
 
@@ -113,16 +110,3 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
 
     return {' no hi ha cap imatge amb el nom ' + nomimatge + ' a la carpeta ' + nomcarpeta }
 
-    #aquest for tenc un exemple de com ficar a un yield text i el valor d'alguna variable.
-    #for i in range(0,5):
-    #      yield ('es troba a la secció {i}'.format(i=i))
-
-
-
-
-
-
-
-
-#os.listdir(nom directori)#contingut de sa carpeta
-#filtrar les que son carpetes os.path.isdir(path des fitxer que vols saber si es fitxer o carpeta) torna vertader si es carpeta fals si no ho és
