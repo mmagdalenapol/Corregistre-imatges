@@ -21,12 +21,10 @@ for i in range (0,len(ic)):
 
 
 #proves amb la funcio anhir i cerca_imatge_anhir
-from spline_registration.databases import anhir
-from spline_registration.databases import cerca_imatge_anhir
-from spline_registration.utils import visualize_side_by_side
+from spline_registration.databases import anhir,cerca_imatge_anhir
 from skimage.io import imread
-from spline_registration.losses import SSD
-from spline_registration.losses import info_mutua
+from spline_registration.utils import visualize_side_by_side
+from spline_registration.losses import SSD,info_mutua
 from spline_registration.transform_models import Rescala
 
 

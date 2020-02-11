@@ -25,9 +25,11 @@ def create_results_dir(experiment_name):
 
 def visualize_side_by_side(image_left, image_right, title=None):
     plt.figure()
-    plt.subplot(1, 2, 1)
+   # plt.subplot(1, 2, 1)
+    plt.subplot(2, 1, 1) #si les imatges són allargades millor
     plt.imshow(image_left)
-    plt.subplot(1, 2, 2)
+    #plt.subplot(1, 2, 2)
+    plt.subplot(2, 1, 2) #si les imatges són allargades millor
     plt.imshow(image_right)
     if title:
         plt.title(title)

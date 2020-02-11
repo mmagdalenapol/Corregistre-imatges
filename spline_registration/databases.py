@@ -1,5 +1,4 @@
 from skimage.io import imread
-from skimage import io
 from spline_registration.utils import get_databases_path
 from spline_registration.utils import base_path
 import os

@@ -4,10 +4,11 @@ from spline_registration.utils import imatge_vec
 
 
 class BaseTransform:
+
     def find_best_transform(self, reference_image, input_image):
         raise NotImplementedError
 
-    def apply_transform(self, input_image):
+    def apply_transform(self,reference_image, input_image):
         raise NotImplementedError
 
     def visualize_transform(self):
@@ -33,15 +34,15 @@ transformada.apply_transform(None)
 '''
 
 class Rescala(BaseTransform):
+
     def __init__(self):
-        self.dim_imatge = None
+        self.dim_image = None
 
     def find_best_transform(self, reference_image, input_image):
-        return reference_image.shape
+        return reference_image.shape[0]*reference_image.shape[1]
 
-    def apply_transform(self, input_image, dim):
-        self.find_best_transform()
-        return resize(input_image, dim)
+    def apply_transform(self, reference_image,input_image):
+        return resize(input_image, reference_image.shape)
 
 '''
 a apply_transform no puc fer servir el resultat de find_best_transform no???
