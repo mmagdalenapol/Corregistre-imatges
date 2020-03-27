@@ -25,11 +25,11 @@ def create_results_dir(experiment_name):
 
 def visualize_side_by_side(image_left, image_right, title=None):
     plt.figure()
-   # plt.subplot(1, 2, 1)
-    plt.subplot(2, 1, 1) #si les imatges són allargades millor
+    plt.subplot(1, 2, 1)
+    #plt.subplot(2, 1, 1) #si les imatges són allargades millor
     plt.imshow(image_left)
-    #plt.subplot(1, 2, 2)
-    plt.subplot(2, 1, 2) #si les imatges són allargades millor
+    plt.subplot(1, 2, 2)
+   # plt.subplot(2, 1, 2) #si les imatges són allargades millor
     plt.imshow(image_right)
     if title:
         plt.title(title)
@@ -38,7 +38,7 @@ def visualize_side_by_side(image_left, image_right, title=None):
 
 '''
 aquesta funció ens permet visualitzar 2 imatges una devora l'altre.
-ens diu que farem una fila i dos columnes
+ens diu que farem una fila i dues columnes
 a la primera columna colocarem image_left
 a la segona columna colocarem image_right
 a més si hem especificat un title el posarà
@@ -59,7 +59,7 @@ aquesta funció bàsicament el que fa es convertir una imatge en un vector.
  
 ho convertirem amb: |1|2|3|4|5|6|
 
-la n és perquè a cops a dins cada element de la matriu no tendrem un únic calor sinó que en tendrem 3 rgb.
+la n és perquè a cops a dins cada element de la matriu no tendrem un únic color sinó que en tendrem 3 rgb.
 per tan al cas anteior seria n=1
 però pràcticament sempre serà n=3. (n és el nombre d'elements que hi ha a cada element de l'array)
 És a dir estarem en la següent situació:
@@ -83,12 +83,11 @@ def descomposar (imatge,n):
     imatge = (imatge - imatge.min())/(imatge.max()-imatge.min()) #aixi tots els valors de la imatge van entre 0 i 1
     imatge = np.floor_divide(imatge, 1/n) #ara cada valor de la imatge és la seva classe.
 
-    imgcol=imatge_vec(imatge,3)
+    imgcol = imatge_vec(imatge,3)
 
     imatge = imgcol[:, 0] * n + imgcol[:, 1] + n * n * imgcol[:, 2]
 
     return imatge
-
 '''
 la funció descomposar el que fa és agrupar els valors dels nombres en n classes (la de 0 fins la de n-1)
 el primer que feim és convertir  la imatge per tal que el rang dels valors sigui del 0 a l'1.
@@ -98,9 +97,9 @@ un pic fet això el que volem es que cada valor enlloc de tenir tres nombres el 
 nombre que l'identifiqui de manera única amb aquest.
 
 per fer aquesta operació més fàcil el que feim es convertir la imatge en una altre que té tres columnes(R,G,B)
-amb la funció imatge_vec.És a dir, a imgcol tenim la imatge original però en forma de vector, és a dir, els elements
+amb la funció imatge_vec. És a dir, a imgcol tenim la imatge original però en forma de vector, és a dir, els elements
 de la primera fila un davall l'altre, després el mateix amb la segona i així fins la darrera. 
 Cada element de imgcol són els 3 valors rgb.
 
-per tant ara com volem convertir-ho en un únic valor feim R*n + G +B*n^2  
+per tant ara com volem convertir-ho en un únic valor feim R*n + G +B*n^2. 
 '''

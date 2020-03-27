@@ -30,12 +30,12 @@ def anhir():
     carpeta_inici = base_path('databases/anhir/dataset_medium')
     '''
        Feim feina amb les imatges de anhir.
-       Per tant el primer que feim es indicar la carpeta on hi haurà totes les subcarpetes que anirem cercant.
-       Al nostre cas tot el que va abans de database no ho hem de posar perquè el nostre directori de feina es 
-       precisament spline_registration.
-       
+       Per tant el primer que feim és indicar la carpeta on hi haurà totes les subcarpetes que anirem cercant.
+       Al nostre cas tot el que va abans de databases no ho hem de posar perquè el nostre directori de feina és 
+       precisament spline_registration. 
     '''
     contingut_carpeta_inici = os.listdir(carpeta_inici)
+
     '''
     Ara guardam a contingut_carpeta_inici una llista de les 
     carpetes i arxius que hi ha dins la nostra carpeta d'inici
@@ -48,7 +48,7 @@ def anhir():
 
     for subcarpeta in subcarpetes_carpeta_inici:
         l = []
-        direccio =carpeta_inici + '/' + subcarpeta
+        direccio = carpeta_inici + '/' + subcarpeta
         j = -1
         '''
         el vector l es on guardarem els path de les imatges.
@@ -102,7 +102,7 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
     for imatge in carpeta:
         if imatge.find(nomimatge)>=0:
             'donada una cadena de caràcters find ens cerca si hi ha una combinacio de lletres dedins.' \
-            'en casafirmatiu dona un nombre positiu i vol dir que hem trobat la imatge desitjada.'
+            'en cas afirmatiu dóna un nombre positiu i vol dir que hem trobat la imatge desitjada.'
             #print('la imatge ' , nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
             return imatge
 

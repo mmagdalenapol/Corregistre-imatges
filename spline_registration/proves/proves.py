@@ -33,7 +33,7 @@ imatge2 = imread(cerca_imatge_anhir (anhir(),'mammary-gland_2', 's2_62-ER_A4926-
 
 transformada=Rescala()
 dim=transformada.find_best_transform(imatge1,imatge2)#dimensio de la imatge que volem reescalar
-imatge2 = transformada.apply_transform(imatge2,dim)#rescalam la imatge 2 per tal que sigui de la mateixa dimensio que la 1
+imatge2 = transformada.apply_transform(imatge1,imatge2)#rescalam la imatge 2 per tal que sigui de la mateixa dimensio que la 1
 
 visualize_side_by_side(imatge1,imatge2, 'Esquerra: s2_64-PR_A4926-4L.jpg ; Dreta: s2_62-ER_A4926-4L.jpg ')
 print('L´error SSD entre les imatges de la mateixa mostra és:',SSD(imatge1, imatge2))
@@ -73,7 +73,7 @@ print('informació mutua imatge 1 amb diferent:', info_mutua(mammarygland_2_imat
 
 
 
-#30 de novemdre 2019 al 8 de desembre
+#30 de novembre 2019 al 8 de desembre
 import numpy as np
 a=np.array([0.2,3])
 b=np.array([1.9,9.2])
@@ -86,6 +86,7 @@ from skimage import data
 coins = data.coins()
 
 A=np.array([a,b,c,d])
+A=A.reshape(2,2,2)
 A=np.maximum(A,0) # Si ens diu que ve de posicions negatives ho posam com si vengués de la corresponent coordenada 0
 A[:,:,0]=np.minimum(A[:,:,0],coins.shape[0]-1) #la coordenada x no pot ser major que les files de l'imatge de referencia
 A[:,:,1]=np.minimum(A[:,:,1],coins.shape[1]-1) #la coordenada y no pot ser major que les columnes de l'imatge dereferència
@@ -166,3 +167,80 @@ transformada = Rescala()
 dim =transformada.find_best_transform(imatge1, imatge2)
 imatge2rescalada= transformada.apply_transform(imatge2,dim)       
 '''
+
+#març
+
+'''
+canviat tot el de interpolació bilineal perquè el que vaig fer no estava bé 
+'''
+import numpy as np
+a=np.array([0.2,3])
+b=np.array([1.9,9.2])
+c=np.array([-6.2,5.9])
+d=np.array([1,780])
+e=np.array([8,4.3])
+f=np.array([-19.1,3.21])
+
+from skimage import data
+
+reference_image = data.coins()
+
+A=np.array([a,b,c,d])
+A=A.reshape(2,2,2)
+
+A = np.maximum(A, 0)
+A[:, :, 0] = np.minimum(A[:, :, 0], reference_image.shape[0] - 1)
+A[:, :, 1] = np.minimum(A[:, :, 1], reference_image.shape[1] - 1)
+
+columna1 = A[:, :, 0]
+columna2 = A[:, :, 1]
+A11 = np.ones(A.shape)
+A11[:, :, 0] = np.floor(columna1)
+A11[:, :, 1] = np.ceil(columna2)
+
+A12 = np.ceil(A)
+
+A21 = np.floor(A)
+
+A22 = np.ones(A.shape)
+A22[:, :, 0] = np.ceil(columna1)
+A22[:, :, 1] = np.floor(columna2)
+
+A = imatge_vec(A, 2)
+A11 = imatge_vec(A11, 2).astype(int)
+A12 = imatge_vec(A12, 2).astype(int)
+A21 = imatge_vec(A21, 2).astype(int)
+A22 = imatge_vec(A22, 2).astype(int)
+f11 = np.zeros(A.shape[0])  # només necessitam un nombre per posició
+f12 = np.zeros(A.shape[0])
+f21 = np.zeros(A.shape[0])
+f22 = np.zeros(A.shape[0])
+denx = (A12[:, 0] - A21[:, 0])
+deny = (A12[:, 1] - A21[:, 1])
+
+num21x = A12[:,0]-A[:,0]
+num21y = A12[:,1]-A[:,1]
+num11y = A21[:,1]-A[:,1]
+num22x = A21[:,0]-A[:,0]
+
+f21[np.where(denx + deny == 0)] = 1
+
+den = np.where(denx + deny == 2, denx * deny, 1)  # per evitar problemes interns dividint entre 0
+f21[np.where(denx + deny == 2)] = ((num21x * num21y) / den)[np.where(denx + deny == 2)]
+f22[np.where(denx + deny == 2)] = ((num22x * num21y) / -den)[np.where(denx + deny == 2)]
+f11[np.where(denx + deny == 2)] = ((num21x * num11y) / -den)[np.where(denx + deny == 2)]
+f12[np.where(denx + deny == 2)] = ((num22x * num11y) / den)[np.where(denx + deny == 2)]
+
+denxmodificat = np.where(deny - denx == -1,denx,1) # per evitar problemes interns dividint entre 0
+f21[np.where(deny - denx == -1)] = (num21x / denxmodificat)[np.where(deny - denx == -1)]
+f22[np.where(deny - denx == -1)] = (num22x / -denxmodificat)[np.where(deny - denx == -1)]
+
+denymodificat = np.where(deny - denx == 1,deny,1)# per evitar problemes interns dividint entre 0
+f21[np.where(deny - denx == 1)] = (num21y / denymodificat)[np.where(deny - denx == 1)]
+f11[np.where(deny - denx == 1)] = (num11y / -denymodificat)[np.where(deny - denx == 1)]
+
+B = (f11 * reference_image[A11[:, 0], A11[:, 1]] + f12 * reference_image[A12[:, 0], A12[:, 1]] + f21 * reference_image[
+    A21[:, 0], A21[:, 1]] + f22 * reference_image[A22[:, 0], A22[:, 1]])
+
+#veim que sembla ho fa bé ja que són valors molts pròxims als de la imatge de referència en els pixels més pròxims.
+#reference_image[1, 383],reference_image[0, 6],reference_image[2, 9],reference_image[0,3]
