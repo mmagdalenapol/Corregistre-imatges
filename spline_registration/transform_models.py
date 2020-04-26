@@ -204,3 +204,10 @@ class ElasticTransform(BaseTransform):
 
 #imatge_input_transformada = model_transformar.apply_transform(imatge_input)
 
+class trans_prova(BaseTransform):
+    def  apply_transform(self, reference_image, input_image):
+        from scipy import ndimage
+        return ndimage.rotate(input_image, 30)
+    '''
+    és simplement una rotació per fer proves utilitzant una transformada. no se si es exactament com ho hauria de definir però ho pos així.
+    '''

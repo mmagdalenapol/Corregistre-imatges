@@ -244,3 +244,8 @@ B = (f11 * reference_image[A11[:, 0], A11[:, 1]] + f12 * reference_image[A12[:, 
 
 #veim que sembla ho fa bé ja que són valors molts pròxims als de la imatge de referència en els pixels més pròxims.
 #reference_image[1, 383],reference_image[0, 6],reference_image[2, 9],reference_image[0,3]
+
+
+
+
+
