@@ -56,6 +56,7 @@ class ElasticTransform(BaseTransform):
         A = self.apply_transform(reference_image,input_image)
 
         '''
+        A
         la transformació m'hauria de donar les coordenades d'on se suposa que ve cada pixel de la imatge corregistrada.
         Aquestes coordenades poden ser decimals i per això el valor del color depèn del color dels 4 pixels més propers.
         A encara és una matriu
