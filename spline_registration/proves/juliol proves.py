@@ -6,7 +6,7 @@ from time import time
 imatge_input=imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_input.jpg')
 imatge_reference= imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_reference.jpg')
 
-nx, ny = (20,20)
+nx, ny = (6,6)
 malla = np.mgrid[0:imatge_input.shape[0]:round(imatge_input.shape[0]/nx), 0:imatge_input.shape[1]:round(imatge_input.shape[1]/ny)]
 malla_x = malla[0]#inicialitzam a on van les coordenades x a la imatge_reference
 malla_y = malla[1]#inicialitzam a on van les coordenades y a la imatge_reference
@@ -76,6 +76,7 @@ def posicio(x,y,malla_x,malla_y):
     return interpolacio
 
 def funcio_min(p):
+    titer = time()
     malla_x = p[0:nx*ny].reshape(nx,ny)
     malla_y = p[nx*ny:2*nx*ny].reshape(nx,ny)
 
@@ -90,9 +91,13 @@ def funcio_min(p):
     R = (R).reshape(coordenadesx[(nx - 1)] * coordenadesy[(ny - 1)], 3)
 
     dif = np.sum(np.abs(I-R), 1)
+    tfi = time()
+    print('temps',tfi-titer )
+
     return dif
 from scipy.optimize import least_squares
 topti=time()
 resultat = least_squares(funcio_min, A2, method='lm')
 tfi=time()
 print(resultat, tfi-topti)
+print('bjhn')
