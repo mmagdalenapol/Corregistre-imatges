@@ -3,28 +3,32 @@ from skimage.io import imread
 from time import time
 
 
-imatge_input=imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_input.jpg')
-imatge_reference= imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_reference.jpg')
+imatge_input = imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_input.jpg')
+imatge_reference = imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_reference.jpg')
 
 nx, ny = (20,20)
 malla = np.mgrid[0:imatge_input.shape[0]:round(imatge_input.shape[0]/nx), 0:imatge_input.shape[1]:round(imatge_input.shape[1]/ny)]
+
 coordenadesx = np.arange(0,imatge_input.shape[0],round(imatge_input.shape[0]/nx))
 coordenadesy = np.arange(0,imatge_input.shape[1],round(imatge_input.shape[1]/ny))
 delta = [coordenadesx[1],coordenadesy[1]]
 malla_x = malla[0]#inicialitzam a on van les coordenades x a la imatge_reference
 malla_y = malla[1]#inicialitzam a on van les coordenades y a la imatge_reference
 
-#A=np.concatenate((coordenadesx,coordenadesy ), axis=0) no funciona no tenc la malla original bé
-
-#imatge input
-#A2 =np.array([malla_x.ravel(),malla_y.ravel()])#coordenades a la imatge 2
+'''
+Alternativa per trobar A2:
 A2x=malla_x.ravel()
 A2y=malla_y.ravel()
 A2=np.concatenate((A2x,A2y ), axis=0) #array_like with shape (n,) on n= nx*ny*2
+print('a A2 tenim a les primeres nx*ny columnes les coordenades x de la malla i a les segones les coordenades y. Fent referencia a coordenades de la imatge reference \n')
+'''
+A2 = malla.flatten()
 #a A2 tenim a les primeres nx*ny columnes les coordenades x de la malla i a les segones les coordenades y.
 
 #com inicialitzam A2 per a que sigui la identitat tenim: A=A2 són les posicións de la malla a la imatge input també.
 A = np.copy(A2)
+print('com inicialitzam A2 per a que sigui la identitat tenim: A=A2 són les posicións de la malla a la imatge input també.')
+
 def colors_transform(reference_image,A):
 
     '''
@@ -32,9 +36,15 @@ def colors_transform(reference_image,A):
     #ara A es és una matriu de dimensió (2, nx*ny)
     # A[0] conté les coordenades x, A[1] conté les coordenades y.
     '''
-
-    A = np.array([A[0:(nx * ny)], A[nx * ny:(2 * nx * ny)]])
+    if A.shape == (2*nx*ny,):#per quan ficam la malla A2
+        A = np.array([A[0:(nx * ny)], A[nx * ny:(2 * nx * ny)]])
+        '''
+        #si li introduim A com un array_like with shape (n,) on n= nx*ny*2.
+        #ara A es és una matriu de dimensió (2, nx*ny)
+        # A[0] conté les coordenades x, A[1] conté les coordenades y.
+        '''
     A = np.maximum(A, 0)
+
     A[0] = np.minimum(A[0], reference_image.shape[0] - 1)
     A[1] = np.minimum(A[1], reference_image.shape[1] - 1)
 
@@ -195,13 +205,14 @@ def malla_optima(p):
     return (malla_x,malla_y)
 
 from scipy.optimize import least_squares
-res = least_squares(funcio_minimitzar, A2,method='lm' )
-parametres = res.x
+#res = least_squares(funcio_minimitzar, A2,method='lm' )
+#parametres = res.x
 
 
-malla_x = malla_optima(res.x)[0]
-malla_y = malla_optima(res.x)[1]
-def posicio(x,y):
+#malla_x = malla_optima(res.x)[0]
+#malla_y = malla_optima(res.x)[1]
+def posicio(x,y,malla_x,malla_y):
+
 
     s = x / delta[0] - np.floor(x / delta[0]) #val 0 quan la x està a coordenadesx
     t = y / delta[1] - np.floor(y / delta[1]) #val 0 quan la y està a coordenadesy
@@ -231,12 +242,74 @@ def posicio(x,y):
     C = np.array([malla_x[i, j+1], malla_y[i, j+1]])
     D = np.array([malla_x[i+1, j+1],malla_y[i+1,j+1]])
     interpolacio = (s-1)*(t-1)*A + s*(1-t)*B + (1-s)*t*C + s*t*D
+
     return interpolacio
 
-
-imatge_transformada = np.zeros_like((imatge_reference.shape[0],imatge_reference.shape[1],2))
+'''
+imatge_transformada = np.zeros((imatge_reference.shape[0],imatge_reference.shape[1],2))
 for x in range(0, coordenadesx[(nx - 1)]):
     for y in range(0, coordenadesy[(ny - 1)]):
         imatge_transformada[x, y] = posicio(x, y)
 
-    
+'''
+
+
+#1 de juliol
+
+from spline_registration.utils import imatge_vec
+I = imatge_vec(imatge_input[0:coordenadesx[(nx - 1)],0:coordenadesx[(ny - 1)]],3)
+'''
+Això és molt més lento millor emprar mgrid
+T = np.zeros((I.shape[0],2))
+i=0
+tempsbucle=time()
+for x in range(0,coordenadesx[(nx - 1)]):
+    for y in range(0,coordenadesy[(ny - 1)]):
+        T[i]=posicio(x,y)
+        i=i+1
+tempsfibucle=time()
+'''
+
+
+tempsgrid = time()
+C = np.mgrid[0:coordenadesx[(nx - 1)], 0:coordenadesy[(ny - 1)]]
+Cx = C[0].ravel()
+Cy = C[1].ravel()
+P=posicio(Cx,Cy,malla_x,malla_y)
+#si vull la posició corresponent a I[j] hem de posar P[:,j]
+
+tempsfigrid = time()
+
+R=colors_transform(imatge_reference,P)
+R=np.hsplit(R, coordenadesx[(nx - 1)]*coordenadesy[(ny - 1)])
+R=np.array(R)
+R=(R.ravel()).reshape(coordenadesx[(nx - 1)]*coordenadesy[(ny - 1)],3)
+'''
+R[:,1]== imatge_reference[P[:,1]] si tot son enters
+R[:,1].astype(int)==imatge_reference[(P[:,1][0]).astype(int),(P[:,1][1]).astype(int)]
+'''
+
+
+def funcio_min(p):
+    malla_x = p[0:nx*ny].reshape(nx,ny)
+    malla_y = p[nx*ny:2*nx*ny].reshape(nx,ny)
+
+    from spline_registration.utils import imatge_vec
+    I = imatge_vec(imatge_input[0:coordenadesx[(nx - 1)], 0:coordenadesx[(ny - 1)]], 3)
+    C = np.mgrid[0:coordenadesx[(nx - 1)], 0:coordenadesy[(ny - 1)]]
+    Cx = C[0].ravel()
+    Cy = C[1].ravel()
+    P = posicio(Cx, Cy,malla_x,malla_y)
+    R = colors_transform(imatge_reference, P)
+    R = np.hsplit(R, coordenadesx[(nx - 1)] * coordenadesy[(ny - 1)])
+    R = np.array(R)
+    R = (R.ravel()).reshape(coordenadesx[(nx - 1)] * coordenadesy[(ny - 1)], 3)
+
+    dif = np.sum(np.abs(I-R), 1)
+
+    #dif = np.sum(I-R, 1)
+    #dif_abs = np.abs(dif)
+    return dif.flatten()
+
+resultat = least_squares(funcio_min, A2, method='lm')
+print(resultat)
