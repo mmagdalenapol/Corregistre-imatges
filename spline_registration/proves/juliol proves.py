@@ -77,8 +77,9 @@ def imatge_transformada(imatge, coord_desti):
     coord_desti[0] = np.minimum(coord_desti[0], imatge.shape[0] - 1)
     coord_desti[1] = np.minimum(coord_desti[1], imatge.shape[1] - 1)
 
-    x = np.arange(coordenadesx[nx - 2])
-    y = np.arange(coordenadesy[ny - 2])
+
+    x = np.arange(coordenadesx[nx - 1]-1)
+    y = np.arange(coordenadesy[ny - 1]-1)
     Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
     Coord_originals_x = Coord_originals_x.ravel()
     Coord_originals_y = Coord_originals_y.ravel()
@@ -137,8 +138,9 @@ def posicio(x, y, malla_x, malla_y):
     s, i = np.modf(x/delta[0])
     t, j = np.modf(y/delta[0])
 
-    i = np.minimum(np.maximum(i.astype('int'), 0), nx-2)
-    j = np.minimum(np.maximum(j.astype('int'), 0), ny-2)
+
+    i = np.minimum(np.maximum(i.astype('int'), 0), nx-1)
+    j = np.minimum(np.maximum(j.astype('int'), 0), ny-1)
 
     # A = np.array([malla_x[i, j], malla_y[i, j]])
     # B = np.array([malla_x[i+1, j], malla_y[i+1, j]])
@@ -156,8 +158,8 @@ def funcio_min(parametres):
     malla_x = parametres[0:nx * ny].reshape(nx, ny)
     malla_y = parametres[nx * ny:2 * nx * ny].reshape(nx, ny)
 
-    x = np.arange(coordenadesx[nx - 2])
-    y = np.arange(coordenadesy[ny - 2])
+    x = np.arange(coordenadesx[nx - 1]-1)
+    y = np.arange(coordenadesy[ny - 1]-1)
     Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
     Coord_originals_x = Coord_originals_x.ravel()
     Coord_originals_y = Coord_originals_y.ravel()
@@ -165,18 +167,33 @@ def funcio_min(parametres):
     Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
     imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
 
-    #dif = np.sum(np.power(imatge_registrada[0:coordenadesx[nx-2],0:coordenadesy[ny-2]]-imatge_reference[0:coordenadesx[nx-2],0:coordenadesy[ny-2]] , 2))
-    dif = np.sum(np.abs(imatge_registrada[0:coordenadesx[nx-2],0:coordenadesy[ny-2]]-imatge_reference[0:coordenadesx[nx-2],0:coordenadesy[ny-2]] ), 2)
+    dif = np.sum(np.power(imatge_registrada[0:coordenadesx[nx-2],0:coordenadesy[ny-2]]-imatge_reference[0:coordenadesx[nx-2],0:coordenadesy[ny-2]] , 2))
+    #dif = np.sum(np.abs(imatge_registrada[0:(coordenadesx[nx - 1]-1),0:(coordenadesy[ny - 1]-1)]-imatge_reference[0:(coordenadesx[nx - 1]-1),0:(coordenadesy[ny - 1]-1)] ), 2) #UN ERROR PER CADA PIXEL
+    return dif
+    #return dif.flatten()
 
-    #return dif
-    return dif.flatten()
 
+def min_info_mutua(parametres):
+    malla_x = parametres[0:nx * ny].reshape(nx, ny)
+    malla_y = parametres[nx * ny:2 * nx * ny].reshape(nx, ny)
+
+    x = np.arange(coordenadesx[nx - 1]-1)
+    y = np.arange(coordenadesy[ny - 1]-1)
+    Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
+    Coord_originals_x = Coord_originals_x.ravel()
+    Coord_originals_y = Coord_originals_y.ravel()
+
+    Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
+    imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
+    from spline_registration.losses import info_mutua
+    info = info_mutua(imatge_registrada[0:(coordenadesx[nx - 1]-1),0:(coordenadesy[ny - 1]-1)],imatge_reference[0:(coordenadesx[nx - 1]-1),0:(coordenadesy[ny - 1]-1)],5)
+    return -info
 
 from scipy.optimize import least_squares
-topti=time()
-resultatlm = least_squares(funcio_min, malla_vector, method='lm')
-tfi=time()
-print(resultatlm, tfi-topti)
+#topti=time()
+#resultatlm = least_squares(funcio_min, malla_vector, method='lm')
+#tfi=time()
+#print(resultatlm, tfi-topti)
 '''
 malla_optima_lm= np.array([ 6.07796566e-01,  1.46710292e+02,  2.66995869e+01,  2.13154961e+01,
         6.37798545e+00, -4.80483022e+01,  7.95887197e+01,  1.21487639e+02,
@@ -287,10 +304,10 @@ temps_emprat =  4661.987810134888 #segons
         4.25000000e+02,  5.10000000e+02]) 4661.987810134888
 '''
 
-#topti=time()
-#resultattrf = least_squares(funcio_min, malla_vector, method='trf')
-#tfi=time()
-#print(resultattrf, tfi-topti)
+topti=time()
+resultattrf = least_squares(funcio_min, malla_vector, method='trf')
+tfi=time()
+print(resultattrf, tfi-topti)
 
 '''
 
@@ -328,19 +345,34 @@ temps_trf= 1722.3859059810638
 #tfi=time()
 #print(resultat, tfi-topti)
 
-parametres_optims = resultatlm.x
+#topti=time()
+#resultatinfo = least_squares(min_info_mutua, malla_vector, method='trf', verbose=2)#, max_nfev=10)
+#tfi=time()
+#print(resultatinfo, tfi-topti)
+
+
+
+
+
+
+
+parametres_optims = resultattrf.x
 
 malla_x = parametres_optims[0:(nx) * (ny)].reshape(nx, ny )
 malla_y = parametres_optims[(nx) * (ny):2 * (nx) * (ny)].reshape(nx, ny)
 
-x = np.arange(coordenadesx[nx - 2])
-y = np.arange(coordenadesy[ny - 2])
+x = np.arange(coordenadesx[nx - 1]-1)
+y = np.arange(coordenadesy[ny - 1]-1)
 Coord_originals_x, Coord_originals_y  = np.meshgrid(x, y)
 Coord_originals_x = Coord_originals_x.ravel()
 Coord_originals_y  = Coord_originals_y .ravel()
 Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
 
 imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
+
+
+
+
 
 
 from spline_registration.utils import visualize_side_by_side
@@ -360,8 +392,8 @@ im2=Image.open('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/s
 
 im = Image.blend(im1, im2, 0.5)
 plt.imshow(im)
+plt.title('imatge input sobre la imatge_reference')
 plt.show()
-#plt.figure(3)
 
 import pylab as pl
 #VEURE MALLA SOBRE LA IMATGE IMPUT
@@ -370,7 +402,7 @@ import pylab as pl
 plt.imshow(imatge_input)
 pl.plot(malla[0],malla[1],color='blue')
 pl.plot(malla[1],malla[0],color='blue')
-#plt.figure(4)
+pl.title('malla inicial sobre la imatge input')
 pl.show()
 
 
@@ -379,7 +411,7 @@ pl.show()
 plt.imshow(imatge_registrada)
 pl.plot(malla_x,malla_y,color='green')
 pl.plot(malla_y,malla_x,color = 'green')
-#plt.figure(5)
+pl.title('malla òptima sobre la imatge registrada')
 pl.show()
 
 #veim que no funciona perquè no canvia la malla i per tant la registrada es igual a la input (als punts que hi ha interpolació)
@@ -387,4 +419,46 @@ plt.imshow(imatge_registrada-imatge_input)
 plt.show()
 
 
+'''
 
+from scipy.ndimage import gaussian_filter
+im_gaussian = gaussian_filter(imatge_reference, sigma=5)
+
+
+def min_gaussian_info_mutua(parametres):
+    malla_x = parametres[0:nx * ny].reshape(nx, ny)
+    malla_y = parametres[nx * ny:2 * nx * ny].reshape(nx, ny)
+
+    x = np.arange(coordenadesx[nx - 1]-1)
+    y = np.arange(coordenadesy[ny - 1]-1)
+    Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
+    Coord_originals_x = Coord_originals_x.ravel()
+    Coord_originals_y = Coord_originals_y.ravel()
+
+    Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
+    imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
+    from spline_registration.losses import info_mutua
+    info = -info_mutua(imatge_registrada,im_gaussian,5)
+    return info
+
+res = least_squares(min_gaussian_info_mutua,malla_vector, method='trf',verbose=2)
+parametres_optims = res.x
+
+malla_x = parametres_optims[0:(nx) * (ny)].reshape(nx, ny )
+malla_y = parametres_optims[(nx) * (ny):2 * (nx) * (ny)].reshape(nx, ny)
+
+x = np.arange(coordenadesx[nx - 1]-1)
+y = np.arange(coordenadesy[ny - 1]-1)
+Coord_originals_x, Coord_originals_y  = np.meshgrid(x, y)
+Coord_originals_x = Coord_originals_x.ravel()
+Coord_originals_y  = Coord_originals_y .ravel()
+Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
+
+imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
+
+
+from spline_registration.utils import visualize_side_by_side
+from matplotlib import pyplot as plt
+
+visualize_side_by_side(imatge_registrada,imatge_reference,'registrada i reference')
+'''
