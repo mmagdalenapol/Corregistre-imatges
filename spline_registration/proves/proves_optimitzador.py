@@ -90,7 +90,7 @@ def funcio_min(p):
     return dif
 from scipy.optimize import least_squares
 topti=time()
-resultat = least_squares(funcio_min, malla_vector, method='trf', verbose=2)
+resultat = least_squares(funcio_min, malla_vector, method='trf',verbose=2)
 tfi=time()
 print(resultat, tfi-topti)
 parametres_optims = resultat.x

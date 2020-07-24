@@ -132,3 +132,34 @@ topti=time()
 resultat = least_squares(funcio_min, A2, method='trf', verbose=2, max_nfev=10)
 tfi=time()
 print(resultat, tfi-topti)
+
+imatge1 = None
+imatge2 = None
+# Superposar imatges:
+imatge_superposada = imatge1 * 0.5 + imatge2 * 0.5
+
+imatge_grisos = None
+# Colorejar imatges en blanc i negre:
+import matplotlib.pyplot as plt
+cmap = plt.cm.get_cmap('bone')  # 'bone', 'summer', 'wistia', 'blues', 'reds', ...
+imatge_color = cmap(imatge_grisos)
+
+
+# Comptador en funció, amb variable global
+num_iteration = 0
+def myfunc():
+    global num_iteration
+    num_iteration = num_iteration + 1
+    if num_iteration % 10 == 0:
+        print('Una iteració de cada 10')
+    # ...
+
+myfunc()
+
+
+# Filtratge gaussià, prova a canviar el valor de sigma per veure més o menys efecte
+from skimage.filters import gaussian
+imatge_filtrada = gaussian(imatge_color, sigma=50, multichannel=True)
+imatge_filtrada = gaussian(imatge_grisos, sigma=50, multichannel=False)
+
+

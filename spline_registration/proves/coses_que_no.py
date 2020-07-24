@@ -236,3 +236,93 @@ for x in range (0, imatge.shape[0]):
         '''
 
         return B
+
+#proves juliol funcions que no:
+def colors_transform(reference_image,A):
+    global nx,ny
+    '''
+    #si li introduim A com un array_like with shape (n,) on n= nx*ny*2.
+    #ara A es és una matriu de dimensió (2, nx*ny)
+    # A[0] conté les coordenades x, A[1] conté les coordenades y.
+    '''
+    if A.shape == (2*nx*ny,):
+        A = np.array([A[0:(nx * ny)], A[nx * ny:(2 * nx * ny)]])
+        '''
+        #si li introduim A com un array_like with shape (n,) on n= nx*ny*2.
+        #ara A es és una matriu de dimensió (2, nx*ny)
+        # A[0] conté les coordenades x, A[1] conté les coordenades y.
+        '''
+    A = np.maximum(A, 0)
+
+    A[0] = np.minimum(A[0], reference_image.shape[0] - 2)
+    A[1] = np.minimum(A[1], reference_image.shape[1] - 2)
+
+
+    X = A[0]
+    Y = A[1]
+    Ux = np.floor(X).astype(int)
+    Uxceil= Ux + 1
+
+    Vy = np.floor(Y).astype(int)
+    Vyceil = Vy + 1
+    a = X-Ux
+    b = Y-Vy
+
+    #si a és 0 no hauriem de tenir en compte Ux+1 tan sols Ux i si b es 0 no he m de tenir en compte Vy+1 tan sols Vy
+    M = np.array([reference_image[Ux, Vy][:, 0],reference_image[Ux, Vy][:, 1],reference_image[Ux, Vy][:, 2]])
+    B = np.array([reference_image[Uxceil, Vy][:,0],reference_image[Uxceil, Vy][:,1],reference_image[Uxceil, Vy][:,2]])
+    C = np.array([reference_image[Ux, Vyceil][:,0],reference_image[Ux, Vyceil][:,1],reference_image[Ux, Vyceil][:,2]])
+    D = np.array([reference_image[Uxceil, Vyceil][:,0],reference_image[Uxceil, Vyceil][:,1],reference_image[Uxceil, Vyceil][:,2]])
+
+
+    color = (a-1)*(b-1)*M + a*(1-b)*B + (1-a)*b*C + a*b*D
+
+    return color
+
+def imatge_transformada(imatge, coord_desti):
+
+    '''
+    Introduim la imatge_input i les coordenades a les quals es mouen les originals després d'aplicar l'interpolació.
+    El que volem es tornar la imatge registrada que tengui a les coordenades indicades els colors originals:
+
+    Per fer-ho definesc una imatge registrada (inicialment tota negre) i a les coordenades del destí
+    anar enviant els colors originals.
+    '''
+
+    coord_desti = np.round(coord_desti).astype('int')     # Discretitzar
+    coord_desti = np.maximum(coord_desti, 0)
+    coord_desti[0] = np.minimum(coord_desti[0], imatge.shape[0] - 1)
+    coord_desti[1] = np.minimum(coord_desti[1], imatge.shape[1] - 1)
+
+    x = np.arange(imatge.shape[0])
+    y = np.arange(imatge.shape[1])
+
+    Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
+    Coord_originals_x = Coord_originals_x.ravel()
+    Coord_originals_y = Coord_originals_y.ravel()
+
+    registered_image = np.zeros_like(imatge)
+    registered_image[coord_desti[0], coord_desti[1]] = imatge[Coord_originals_x, Coord_originals_y]
+    return registered_image
+
+def colors_transform_nearest_neighbours(imatge, Coordenades):
+    '''
+    si li introduim Coordenades com un array_like with shape (n,) on n= nx*ny*2.
+    ara Coordenades es és una matriu de dimensió (2, nx*ny)
+        Coordenades[0] conté les coordenades x,
+        Coordenades[1] conté les coordenades y.
+
+    if Coordenades.shape == (2*nx*ny,):
+        Coordenades = np.array([Coordenades[0:(nx * ny)], Coordenades[nx * ny:(2 * nx * ny)]])
+
+    '''
+
+    Coordenades = np.round(Coordenades).astype('int')     # Discretitzar
+    Coordenades = np.maximum(Coordenades, 0)
+    Coordenades[0] = np.minimum(Coordenades[0], imatge.shape[0] - 1)
+    Coordenades[1] = np.minimum(Coordenades[1], imatge.shape[1] - 1)
+    registered_image = imatge[Coordenades[0], Coordenades[1]]
+    registered_image = registered_image.reshape(imatge.shape,order='F')
+
+    return registered_image
+

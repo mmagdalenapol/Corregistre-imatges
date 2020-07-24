@@ -103,3 +103,4 @@ Cada element de imgcol són els 3 valors rgb.
 
 per tant ara com volem convertir-ho en un únic valor feim R*n + G +B*n^2. 
 '''
+
