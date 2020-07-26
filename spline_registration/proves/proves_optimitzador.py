@@ -61,7 +61,7 @@ def posicio(x, y, malla_x, malla_y):
     return interpolacio
 
 def funcio_min(p):
-    titer = time()
+    #titer = time()
     malla_x = p[0:(nx)*(ny)].reshape(nx, ny)
     malla_y = p[(nx)*(ny):2*(nx)*(ny)].reshape(nx, ny)
 
@@ -84,7 +84,7 @@ def funcio_min(p):
 
     dif = np.sum(np.power(imatge_input - R, 2))
 
-    tfi = time()
+    #tfi = time()
     # print('temps',tfi-titer )
 
     return dif
