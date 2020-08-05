@@ -18,6 +18,13 @@ def SSD(reference_image, transformed_image):
 
     return SSD
 
+def RMSE(reference_image, transformed_image):
+
+    N = reference_image.shape[0] * reference_image.shape[1]
+    dif = reference_image-transformed_image
+    RMSE = np.sqrt(np.sum(dif * dif) / N)
+    return RMSE
+
 def info_mutua(reference_image, transformed_image,n):
     '''
     n ens dona en quants de grups dividim cada color

@@ -8,9 +8,9 @@ from skimage.filters import gaussian
 imatge_input=imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_input.jpg')
 imatge_reference= imread('/Users/mariamagdalenapolpujadas/Desktop/universitat/tfg/GITHUB/spline_registration/proves/dog_reference.jpg')
 
-sigma= 25
+sigma= 50
 imatge_input_gaussian = gaussian(imatge_input, sigma=sigma, multichannel=True)
-imatge_reference_gaussian = gaussian(imatge_input,sigma=sigma,multichannel=True )
+imatge_reference_gaussian = gaussian(imatge_reference,sigma=sigma,multichannel=True )
 
 nx, ny = (6,6)
 delta = [int(imatge_input.shape[0]/nx)+1,int(imatge_input.shape[1]/ny)+1]
@@ -98,7 +98,9 @@ def imatge_transformada(imatge, coord_desti):
     Coord_originals_y = Coord_originals_y.ravel()
 
     registered_image = np.zeros_like(imatge)
-    registered_image[coord_desti[0], coord_desti[1]] = imatge[Coord_originals_x, Coord_originals_y]
+    #registered_image = np.copy(imatge)
+    #registered_image[coord_desti[0], coord_desti[1]] = imatge[Coord_originals_x, Coord_originals_y]
+    registered_image[Coord_originals_x, Coord_originals_y] = imatge[coord_desti[0], coord_desti[1]]
     return registered_image
 
 def colors_transform_nearest_neighbours(imatge, Coordenades):
@@ -186,16 +188,8 @@ def min_imatge_transformada(parametres):
 
     '''
 
-    #per a regularitzar:
-    mpost_x = np.copy(malla_x)
-    mpost_x[0:nx] = malla_x[1:(nx+1)]
-    rx = np.abs(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])) - delta[0])
-    sdx = np.std(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])))
 
-    mpost_y = np.copy(malla_y)
-    mpost_x[0:ny] = malla_x[1:(ny+1)]
-    ry = np.abs(np.mean(np.abs(mpost_y[0:ny]-malla_y[0:ny])) - delta[1])
-    sdy = np.std(np.mean(np.abs(mpost_y[0:ny]-malla_y[0:ny])))
+
     #cas filtratge gausià:
 
     dif2 = np.power(imatge_registrada-imatge_reference_gaussian, 2)
@@ -206,7 +200,135 @@ def min_imatge_transformada(parametres):
 
 
 
-    return dif2 + 7*(rx + ry + sdx + sdy)
+    #regularitzar, tenint en compte que la distància entre els punts consecutis (tant de dreta a esquerra, com d'adalt abaix) siguin pròxims.
+    #per fer això, el que vull és que la distància entre els punts en mitjana no sigui ni molt major ni molt menor que la inicial.
+
+
+
+    '''
+    si tenim els següents punts de la malla:
+    
+    A=(x_{n0,0},y_{n0,0})    B=(x_{n0,1},y_{n1,0})
+    *                           *
+    
+    
+    
+    
+    C=(x_{n1,0},y_{n0,1})     D=(x_{n1,1},y_{n1,})
+    *                          *
+    
+    m' interessa que la distància distància de A a B i la de A a C sigui ni molt gran ni molt petita.
+    Per fer-ho he pensat que com inicialment la distància de A a B és delta[1] i la de A a C és delta[0], 
+    llavors voldré que la mitjana de les distàncies sigui propera a n'aquestes inicials. De manera que punts que estaven
+    enfora inicialment ara no estiguin molt aprop i que punts que estaven aprop ara no estiguin molt enfora.
+    
+    Però clar no hem de mirar només la mitjana ja que se podrien compensar punts amb distàncies molt grans amb altres molt petites.
+    Per tant el que vull és que a més es minimitzi també la desviació típica de les distàncies entre els punts de la malla final.
+    
+    així per dur-ho a terme tenint en compte que malla_x i malla_y tenen les següents estructura:
+    
+    malla_x= x_{n0,0} x_{n0,1} .... x_{n0,nx}           malla_y = y_{n0,0}  y_{n1,0} ... y_{ny,0}
+             x_{n1,0} x_{n1,1} .... x_{n1,nx}                     y_{n0,1}  y_{n1,1} ... y_{ny,1}
+                .                                                      .        .
+                .                                                      .        .
+                .                                                      .        .
+             x_{nx,0} x_{nx,1} .... x_{nx,nx}                      y_{n0,ny} y_{n1,ny} ... y_{ny,ny}
+    
+    
+    -començam per les distàncies d'esquerra a dreta (d1) aquí entés com la distància de A a B.
+        d(A,B) = np.sqrt((x_{n0,1}-x_{n0,0})^2 + (y_{n1,0}-y_{n0,0})^2)
+        
+        així per a poder implementar-ho de manera relativament sencilla he pensat crear unes matrius que siguin 
+        com malla_x i malla_y però que a les columnes 0 tenguin la 1 de les originals i així successivament. 
+        Hem de tenir en compte que el que passi amb la darrera columna quedarà un poc enlaire i per això no ho tendrem en compte. 
+        A n'aquestes matrius els anomen mx_col_post i my_col_post  respectivament.
+        
+        mx_col_post = x_{n0,1} x_{n0,2} .... x_{n0,nx} x_{n0,nx}            my_col_post= y_{n1,0}  y_{n2,0} ... y_{ny,0} y_{ny,0}
+                      x_{n1,1} x_{n1,2} .... x_{n1,nx} x_{n1,nx}                         y_{n1,1}  y_{n2,1} ... y_{ny,1} y_{ny,1}
+                         .                                                                   .        .
+                         .                                                                   .        .
+                         .                                                                   .        .
+                      x_{nx,1} x_{nx,1} .... x_{nx,nx} x_{nx,nx}                          y_{n1,ny} y_{n2,ny} ... y_{ny,ny} y_{ny,ny}  
+        
+         
+        per tant al cas general si consideram tots els punts de la malla i no tant sols dos d1 vendrà donat per:
+        
+        n= min(nx,ny)
+        
+        d1=np.sqrt(np.power((mx_col_post-malla_x),2)+np.power((my_col_post-malla_y),2))[0:n,0:n]
+        
+    - amb un raonament anàlog per les distàncies d'adalt a baix (d2) distància de A a C o de B a D.
+        d(A,C) = np.sqrt((x_{n1,0}-x_{n0,0})^2 + (y_{n0,1}-y_{n0,0})^2)
+        
+        ara les matrius han tenir en compte a la fila 0 han de tenir el de la fila 1 i així successivament. A n'aquestes
+        matrius els anomen mx_fila_post my_fila_post.
+        mx_fila_post= x_{n1,0} x_{n1,1} .... x_{n1,nx}           my_fila_post= y_{n0,1}  y_{n1,1} ... y_{ny,1} 
+                      x_{n2,0} x_{n2,1} .... x_{n2,nx}                         y_{n0,2}  y_{n1,2} ... y_{ny,2}
+                         .                                                                   .        .
+                         .                                                                   .        .
+                      x_{nx,0} x_{nx,1} .... x_{nx,nx}                          y_{n0,ny} y_{n1,ny} ... y_{ny,ny}                             .                                                                   .        .
+                      x_{nx,0} x_{nx,1} .... x_{nx,nx}                          y_{n0,ny} y_{n1,ny} ... y_{ny,ny} 
+         
+        d2=np.sqrt(np.power((mx_fila_post - malla_x), 2)+np.power((my_fila_post - malla_y), 2) )[0:n,0:n]
+        
+        
+      Ara tenim 2 matrius, d1 i d2, amb les distàncies entre punts consecutius de la malla.
+      
+      Ara el que m'interesa d'aquestes distàncies es que no hi hagi molta desviació (és a dir que no hi hagi distàncies 
+      de 35 i altres de 1)
+    '''
+    mx_col_post = np.copy(malla_x)
+    my_col_post = np.copy(malla_y)
+    mx_col_post[:,0:nx] = malla_x[:,1:(nx+1)]
+    my_col_post[:, 0:ny] = malla_y[:, 1:(ny + 1)]
+
+    mx_fila_post = np.copy(malla_x)
+    my_fila_post = np.copy(malla_y)
+    mx_fila_post[0:nx] = malla_x[1:(nx+1)]
+    my_fila_post[0:ny] = malla_y[1:(ny + 1)]
+
+    n = min(nx, ny)
+
+    d1 = np.sqrt(np.power((mx_col_post - malla_x), 2) + np.power((my_col_post - malla_y), 2))[0:n, 0:n]
+    d2 = np.sqrt(np.power((mx_fila_post - malla_x), 2) + np.power((my_fila_post - malla_y), 2))[0:n, 0:n]
+
+
+    sd1 = np.std(d1)
+    sd2 = np.std(d2)
+    d1=np.mean(d1)-delta[1]
+    d2=np.mean(d2)-delta[0]
+
+
+    '''
+    #per a regularitzar:
+    mpost_x = np.copy(malla_x)
+    mpost_x[0:nx] = malla_x[1:(nx+1)]
+    rx = np.abs(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])) - delta[0])
+    sdx = np.std(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])))
+
+    mpost_y = np.copy(malla_y)
+    mpost_y[:,0:ny] = malla_y[:,1:(ny+1)]
+    ry = np.abs(np.mean(np.abs(mpost_y[:,0:ny]-malla_y[:,0:ny])) - delta[1])
+    sdy = np.std(np.mean(np.abs(mpost_y[:,0:ny]-malla_y[:,0:ny])))
+
+    #alternativa regularitzar
+    n = min(nx,ny)
+    R = (np.power(mpost_x[0:n, 0:n] - malla_x[0:n, 0:n], 2) + np.power(mpost_y[0:n, 0:n] - malla_y[0:n, 0:n],2))
+    R = np.sqrt(R)
+    Res = np.mean(R)
+    s=np.std(R)
+
+    r = np.sum(np.abs(parametres-mallav_original))
+    r= np.power(parametres-mallav_original, 2)
+    r= np.sum(r)
+    r = np.sqrt (r)
+    N = parametres.size
+    r = np.sum(r)/N
+    '''
+    print(dif2, (sd1+sd2))
+
+    #return dif2 + 10 *(rx + ry + sdx + sdy)
+    return dif2 +(sd1+sd2)#+(d1+d2)
     #return dif.flatten()
 
 #2a opcio
@@ -223,51 +345,93 @@ def min_colors_transform_nearest_neighbours(parametres):
     Coord_originals_y = Coord_originals_y.ravel()
 
     Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
-    R = colors_transform_nearest_neighbours(imatge_reference, Coordenades_desti)
+    imatge_registrada = colors_transform_nearest_neighbours(imatge_reference, Coordenades_desti)
 
-    '''
-    dif = np.power(imatge_input - R, 2)
+
+    dif = np.power(imatge_input - imatge_registrada, 2)
     dif = np.sum(dif,2)
     dif = np.sqrt (dif)
     N = (imatge_input.shape[0])*(imatge_input.shape[1])
     dif = np.sum(dif)/N
-    '''
 
 
 
 
-    #cas filtratge gaussià:
 
-    dif2 = np.power(imatge_input_gaussian-R, 2)
+        #cas filtratge gaussià:
+
+    dif2 = np.power(imatge_input_gaussian-imatge_registrada, 2)
     dif2 = np.sum(dif2,2)
     dif2 = np.sqrt (dif2)
     N = (imatge_input.shape[0])*(imatge_input.shape[1])
     dif2 = np.sum(dif2)/N
 
-    # per a regularitzar:
+    mx_col_post = np.copy(malla_x)
+    my_col_post = np.copy(malla_y)
+    mx_col_post[:,0:nx] = malla_x[:,1:(nx+1)]
+    my_col_post[:, 0:ny] = malla_y[:, 1:(ny + 1)]
+
+    mx_fila_post = np.copy(malla_x)
+    my_fila_post = np.copy(malla_y)
+    mx_fila_post[0:nx] = malla_x[1:(nx+1)]
+    my_fila_post[0:ny] = malla_y[1:(ny + 1)]
+
+    n = min(nx, ny)
+
+    d1 = np.sqrt(np.power((mx_col_post - malla_x), 2) + np.power((my_col_post - malla_y), 2))[0:n, 0:n]
+    d2 = np.sqrt(np.power((mx_fila_post - malla_x), 2) + np.power((my_fila_post - malla_y), 2))[0:n, 0:n]
+
+
+    sd1 = np.std(d1)
+    sd2 = np.std(d2)
+    d1=np.mean(d1)-delta[1]
+    d2=np.mean(d2)-delta[0]
+
+    '''
+    #per a regularitzar:
     mpost_x = np.copy(malla_x)
-    mpost_x[0:nx] = malla_x[1:(nx + 1)]
-    rx = np.abs(np.mean(np.abs(mpost_x[0:nx] - malla_x[0:nx])) - delta[0])
-    sdx = np.std(np.mean(np.abs(mpost_x[0:nx] - malla_x[0:nx])))
+    mpost_x[0:nx] = malla_x[1:(nx+1)]
+    rx = np.abs(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])) - delta[0])
+    sdx = np.std(np.mean(np.abs(mpost_x[0:nx]-malla_x[0:nx])))
 
     mpost_y = np.copy(malla_y)
-    mpost_x[0:ny] = malla_x[1:(ny + 1)]
-    ry = np.abs(np.mean(np.abs(mpost_y[0:ny] - malla_y[0:ny])) - delta[1])
-    sdy = np.std(np.mean(np.abs(mpost_y[0:ny] - malla_y[0:ny])))
+    mpost_y[:,0:ny] = malla_y[:,1:(ny+1)]
+    ry = np.abs(np.mean(np.abs(mpost_y[:,0:ny]-malla_y[:,0:ny])) - delta[1])
+    sdy = np.std(np.mean(np.abs(mpost_y[:,0:ny]-malla_y[:,0:ny])))
+    #cas filtratge gausià:
 
+    dif2 = np.power(imatge_registrada-imatge_reference_gaussian, 2)
+    dif2 = np.sum(dif2,2)
+    dif2 = np.sqrt (dif2)
+    N = (imatge_input.shape[0])*(imatge_input.shape[1])
+    dif2 = np.sum(dif2)/N
 
-    #terme regularitzador antic
-    '''
+    #alternativa regularitzar
+    n = min(nx,ny)
+    R = (np.power(mpost_x[0:n, 0:n] - malla_x[0:n, 0:n], 2) + np.power(mpost_y[0:n, 0:n] - malla_y[0:n, 0:n],2))
+    R = np.sqrt(R)
+    Res = np.mean(R)
+    s=np.std(R)
+
     r = np.sum(np.abs(parametres-mallav_original))
     r= np.power(parametres-mallav_original, 2)
     r= np.sum(r)
     r = np.sqrt (r)
     N = parametres.size
     r = np.sum(r)/N
+
+    #terme regularitzador antic
+    
+    r = np.sum(np.abs(parametres-mallav_original))
+    r= np.power(parametres-mallav_original, 2)
+    r= np.sum(r)
+    r = np.sqrt (r)
+    N = parametres.size
+    r = np.sum(r)/N
+
     '''
-
-    return  dif2 + 7*(rx + ry + sdx + sdy)
-
+    print(dif2, 0.2*(sd1+sd2))
+    return  dif2 + 0.2*(sd1+sd2)
     #tfi = time()
     # print('temps',tfi-titer )
 
@@ -313,6 +477,7 @@ resultat_opcio2= least_squares(min_colors_transform_nearest_neighbours, malla_ve
 tfi=time()
 print(resultat_opcio2, tfi-topti)
 '''
+
 
 
 
@@ -372,7 +537,9 @@ Coord_originals_x = Coord_originals_x.ravel()
 Coord_originals_y  = Coord_originals_y .ravel()
 Coordenades_desti = posicio(Coord_originals_x, Coord_originals_y, malla_x, malla_y)
 
-imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)
+
+imatge_registrada = imatge_transformada(imatge_input, Coordenades_desti)#opcio1
+#imatge_registrada = colors_transform_nearest_neighbours(imatge_reference, Coordenades_desti) #opcio2
 
 #guardar els resultats a una carpeta per cada experiment
 
@@ -382,14 +549,14 @@ path_carpeta_experiment = create_results_dir('corregistre_ca')
 
 fitxer_sortida = open(f'{path_carpeta_experiment}/descripció prova feta.txt', "w+")
 fitxer_sortida.write(f'malla de dimensions: nx={nx}, ny ={ny}\n la imatge corregistrada lhem obtinguda utilitzant '
-                     f'la funció que minimitz: min_imatge_transformada '
+                     f'la funció que minimitz: min_imatge_transformada'
                      f'amb error quatràtic'
-                     f'\n a naquest cas hem aplicat un filtratge gaussià a la imatge_reference abans de res.'
+                     f'\n a naquest cas hem aplicat un filtratge gaussià a la imatge_input abans de res.'
                      f'\n el filtratge gaussià té sigma={sigma}.'
                      f'\n el temps tardat per fer loptimització dels parametres és de: {tfi-topti} segons.'
                      f'\n diff_step=0.1'
                      f'\n el resultat de la optimització: {resultat_opcio1}'
-                     f'\n terme regularitzador amb la mitjana de les distàncies entre valors consecutius a la malla ')
+                     f'\n terme regularitzador, a partir de les distàncies entre valors consecutius a la malla, el que faig és afegir la desviació entre les distàncies aixó tendeix a ser 0 quam hi ha menys desviació ')
 fitxer_sortida.close()
 
 

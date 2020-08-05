@@ -51,73 +51,103 @@ class ElasticTransform(BaseTransform):
     def __init__(self):
         self.dim_imatge = None
         self.A = None
+        self.nx=6
+        self.ny=6
 
-    def colors_transform(self, reference_image, A):
+    def malla_inicial(self, imatge_input):
+        nx = self.nx
+        ny = self.ny
+
+        delta = [int(imatge_input.shape[0]/nx) + 1, int(imatge_input.shape[1]/ny) + 1]
+
         '''
-         A conté les coordenades d'on se suposa que va cada pixel de la imatge corregistrada.
-        Aquestes coordenades poden ser decimals i per això el valor del color depèn del color dels 4 pixels més propers.
-
-        #si li introduim A com un array_like with shape (n,) on n= nx*ny*2.
-        #ara A es és una matriu de dimensió (2, nx*ny)
-        # A[0] conté les coordenades x, A[1] conté les coordenades y.
+        el +1 ens permet assegurar que la darrera fila/columna de la malla estan defora de la imatge.
+        Ja que així creant aquests punts ficticis a fora podem interpolar totes les posicions de la imatge. 
+        Ara la malla serà (nx+1)*(ny+1) però la darrera fila i la darrera columna com he dit són per tècniques.
         '''
+        malla = np.mgrid[ 0: (nx+1)*delta[0] :delta[0], 0: (ny+1)*delta[1]:delta[1]]
 
-        A = np.array([A[0:(nx * ny)], A[nx * ny:(2 * nx * ny)]])
-        '''
-        Abans de res feim uns quantes adaptacions inicials a A. 
-        -No hi ha coordenades negatives per tant qualsevol element negatiu el passam a nes 0.
-        -La coordenada x no pot ser major que les files de la imatge de referència.
-        -La coordenada y no pot ser major que les columnnes de la imatge de referència.
-        '''
-
-        A = np.maximum(A, 0)
-        A[0] = np.minimum(A[0], reference_image.shape[0] - 1)
-        A[1] = np.minimum(A[1], reference_image.shape[1] - 1)
-
-        X = A[0]
-        Y = A[1]
-        Ux = np.floor(X).astype(int)
-        Vy = np.floor(Y).astype(int)
-
-        a = X - Ux
-        b = Y - Vy
-
-        # si a és 0 no hauriem de tenir en compte Ux+1 tan sols Ux i si b es 0 no he m de tenir en compte Vy+1 tan sols Vy
-        M = np.array([reference_image[Ux, Vy][:, 0], reference_image[Ux, Vy][:, 1], reference_image[Ux, Vy][:, 2]])
-        B = np.array(
-            [reference_image[Ux + 1, Vy][:, 0], reference_image[Ux + 1, Vy][:, 1], reference_image[Ux + 1, Vy][:, 2]])
-        C = np.array(
-            [reference_image[Ux, Vy + 1][:, 0], reference_image[Ux, Vy + 1][:, 1], reference_image[Ux, Vy + 1][:, 2]])
-        D = np.array([reference_image[Ux + 1, Vy + 1][:, 0], reference_image[Ux + 1, Vy + 1][:, 1],
-                      reference_image[Ux + 1, Vy + 1][:, 2]])
-
-        color = (a - 1) * (b - 1) * M + a * (1 - b) * B + (1 - a) * b * C + a * b * D
-
-        return color
-
-    def malla(self, input_image):
-        #inicialitzam la malla
-        nx, ny = (20, 20)
-        malla = np.mgrid[0:input_image.shape[0]:round(input_image.shape[0] / nx),
-                0:input_image.shape[1]:round(input_image.shape[1] / ny)]
         malla_x = malla[0]  # inicialitzam a on van les coordenades x a la imatge_reference
         malla_y = malla[1]  # inicialitzam a on van les coordenades y a la imatge_reference
 
-        Mx = malla_x.ravel()
-        My = malla_y.ravel()
-        M = np.concatenate((Mx, My), axis=0)
+        coordenadesx = np.arange(0, (nx + 1) * delta[0], delta[0])
+        coordenadesy = np.arange(0, (ny + 1) * delta[1], delta[1])
 
-        imatge_malla_input = self.colors_transform(input_image, M)
-        imatge_malla_input = np.hsplit(imatge_malla_input, nx * ny)
-        imatge_malla_input = np.array(imatge_malla_input)
-        imatge_malla_input = (imatge_malla_input.ravel()).reshape(nx, ny, 3)
+        malla_vector = np.concatenate((malla_x.ravel(), malla_y.ravel()), axis=0)
 
-        return M,imatge_malla_input
+        return malla_vector
 
+    def posicio(self, x, y, malla_x, malla_y):
+        # s val 0 quan la x està a coordenadesx
+        # t val 0 quan la y està a coordenadesy
+        # i index de la posició més pròxima per davall de la coordenada x a la malla
+        # j index de la posició més pròxima per davall de la coordenada y a la malla
+        nx = self.nx
+        ny = self.ny
+
+        '''
+        hem d'interpolar totes les posicions de la imatge per tant imatge_input.shape[0] = x[-1]+1 
+        i imatge_input.shape[1] = y[-1] + 1.
+        '''
+
+        delta = [int((x[-1]+1) / nx) + 1, int((y[-1] + 1) / ny) + 1]
+
+        s, i = np.modf(x / delta[0])
+        t, j = np.modf(y / delta[1])
+        i = np.minimum(np.maximum(i.astype('int'), 0), nx)
+        j = np.minimum(np.maximum(j.astype('int'), 0), ny)
+
+        interpolacio = np.array([(s - 1) * (t - 1) * malla_x[i, j] + s * (1 - t) * malla_x[i + 1, j]
+                                 + (1 - s) * t * malla_x[i, j + 1] + s * t * malla_x[i + 1, j + 1],
+                                 (s - 1) * (t - 1) * malla_y[i, j] + s * (1 - t) * malla_y[i + 1, j]
+                                 + (1 - s) * t * malla_y[i, j + 1] + s * t * malla_y[i + 1, j + 1]
+                                 ])
+
+        return interpolacio
+
+    def imatge_transformada(self,imatge, coord_desti):
+        '''
+        Introduim la imatge_input i les coordenades a les quals es mouen les originals després d'aplicar l'interpolació.
+        El que volem es tornar la imatge registrada que tengui a les coordenades indicades els colors originals:
+
+        Per fer-ho definesc una imatge registrada (inicialment tota negre) i a les coordenades del destí
+        anar enviant els colors originals.
+        '''
+
+        coord_desti = np.round(coord_desti).astype('int')  # Discretitzar
+        coord_desti = np.maximum(coord_desti, 0)
+        coord_desti[0] = np.minimum(coord_desti[0], imatge.shape[0] - 1)
+        coord_desti[1] = np.minimum(coord_desti[1], imatge.shape[1] - 1)
+
+        x = np.arange(imatge.shape[0])
+        y = np.arange(imatge.shape[1])
+
+        Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
+        Coord_originals_x = Coord_originals_x.ravel()
+        Coord_originals_y = Coord_originals_y.ravel()
+
+        registered_image = np.zeros_like(imatge)
+        registered_image[Coord_originals_x, Coord_originals_y] = imatge[coord_desti[0], coord_desti[1]]
+        return registered_image
+
+    def colors_transform_nearest_neighbours(self,imatge_reference, Coordenades_desti):
+            Coordenades_desti = np.round( Coordenades_desti).astype('int')  # Discretitzar
+            Coordenades_desti = np.maximum(Coordenades_desti, 0)
+            Coordenades_desti[0] = np.minimum(Coordenades_desti[0], imatge_reference.shape[0] - 1)
+            Coordenades_desti[1] = np.minimum(Coordenades_desti[1], imatge_reference.shape[1] - 1)
+
+            registered_image = imatge_reference[Coordenades_desti[0], Coordenades_desti[1]]
+            registered_image = registered_image.reshape(imatge_reference.shape, order='F')
+
+            return registered_image
+
+    def find_best_transform(self, reference_image, input_image):
+
+        return None
 
     def apply_transform(self,reference_image,input_image ):
 
-        return
+        return None
 
 
 

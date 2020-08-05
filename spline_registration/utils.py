@@ -104,3 +104,12 @@ Cada element de imgcol són els 3 valors rgb.
 per tant ara com volem convertir-ho en un únic valor feim R*n + G +B*n^2. 
 '''
 
+def coordenades_originals (imatge):
+    x = np.arange(imatge.shape[0])
+    y = np.arange(imatge.shape[1])
+
+    Coord_originals_x, Coord_originals_y = np.meshgrid(x, y)
+    Coord_originals_x = Coord_originals_x.ravel()
+    Coord_originals_y = Coord_originals_y.ravel()
+
+    return Coord_originals_x,Coord_originals_y
