@@ -51,8 +51,8 @@ class ElasticTransform(BaseTransform):
     def __init__(self):
         self.dim_imatge = None
         self.A = None
-        self.nx=6
-        self.ny=6
+        self.nx=2
+        self.ny=2
 
     def malla_inicial(self, imatge_input):
         nx = self.nx
@@ -77,14 +77,13 @@ class ElasticTransform(BaseTransform):
 
         return malla_vector
 
-    def posicio(self, x, y, malla_x, malla_y):
+    def posicio(self, x, y, malla_x, malla_y,nx,ny):
         # s val 0 quan la x està a coordenadesx
         # t val 0 quan la y està a coordenadesy
         # i index de la posició més pròxima per davall de la coordenada x a la malla
         # j index de la posició més pròxima per davall de la coordenada y a la malla
-        nx = self.nx
-        ny = self.ny
-
+        #nx = self.nx
+        #ny = self.ny
         '''
         hem d'interpolar totes les posicions de la imatge per tant imatge_input.shape[0] = x[-1]+1 
         i imatge_input.shape[1] = y[-1] + 1.
