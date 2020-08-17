@@ -140,6 +140,8 @@ class ElasticTransform(BaseTransform):
 
             return registered_image
 
+
+
     def find_best_transform(self, reference_image, input_image):
 
         return None
