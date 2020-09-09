@@ -2,6 +2,7 @@ import datetime
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from skimage.transform import rescale
 
 def base_path(subdir=None):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -112,4 +113,20 @@ def coordenades_originals (imatge):
     Coord_originals_x = Coord_originals_x.ravel()
     Coord_originals_y = Coord_originals_y.ravel()
 
-    return Coord_originals_x,Coord_originals_y
+    return Coord_originals_x, Coord_originals_y
+
+
+
+
+def color_a_grisos(imatge):
+    return 0.2125 * imatge[:, :, 0] + 0.7154 * imatge[:, :, 1] + 0.0721 * imatge[:, :, 2]
+
+    #return 0.2989 * imatge[:, :, 0] + 0.5870 * imatge[:, :, 1] +  0.1140 * imatge[:, :, 2]
+
+#Perquè aquests nombres? per internet he trobat aquests: 0.2989 * R + 0.5870 * G + 0.1140 *B
+
+def rescalar_imatge(imatge,mida_malla,pixels_per_vertex):
+    resolucio_ideal = (mida_malla[0] * pixels_per_vertex, mida_malla[1] * pixels_per_vertex)
+    scale_factor = (resolucio_ideal[0] / imatge.shape[0], resolucio_ideal[1] / imatge.shape[1])
+    imatge_rescalada = rescale(imatge, scale_factor, multichannel=True,anti_aliasing=False)
+    return imatge_rescalada

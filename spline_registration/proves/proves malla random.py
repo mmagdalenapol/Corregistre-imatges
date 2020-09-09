@@ -5,12 +5,13 @@ from time import time
 import matplotlib.pyplot as plt
 import pylab as pl
 from skimage.filters import gaussian
+from skimage.transform import resize
 from spline_registration.transform_models import ElasticTransform
 from spline_registration.utils import coordenades_originals,create_results_dir
 from spline_registration.losses import RMSE,info_mutua
 from scipy.optimize import least_squares
 
-from skimage.transform import resize
+
 
 path_carpeta_experiment = create_results_dir('prova')
 
@@ -54,7 +55,7 @@ def funcio_min(parametres):
     rmse_gaussian = RMSE(imatge_registrada_input, imatge_reference_gaussian)
     # rmse = RMSE (imatge_registrada_reference,imatge_input_gaussian)
 
-    # infomuta = info_mutua(imatge_registrada_input, imatge_reference_gaussian,10)
+    infomuta = info_mutua(imatge_registrada_input, imatge_reference_gaussian,10)
 
     mx_col_post = (malla_x[:, 1:])
     my_col_post = (malla_y[:, 1:])
@@ -87,7 +88,7 @@ def funcio_min(parametres):
     #print(rmse, 0.1*rmse_gaussian,0.001 * (sd1 + sd2))
     #return rmse + 0.1*rmse_gaussian + 0.001 * (sd1 + sd2)
     #rmse(referencia, input_corregistrada) + mu * rmse(referencia_gaussiana, input_corregistrada_gaussiana) +lambda *desviacions_estandard
-    return rmse_gaussian + 0.001 * (sd1 + sd2)
+    return -infomuta +(sd1+sd2) # + 0.001 * (sd1 + sd2)
 
 def malla_monte_carlo(malla_x,malla_y, nx,ny,eps1, eps2, nombre_execucions):
     L = []
@@ -123,15 +124,16 @@ def malla_monte_carlo(malla_x,malla_y, nx,ny,eps1, eps2, nombre_execucions):
 
         #rmse = RMSE(imatge_registrada_input, imatge_reference)
         rmse_gaussian = RMSE(imatge_registrada_input, imatge_reference_gaussian)
+        infomuta = info_mutua(imatge_registrada_input, imatge_reference_gaussian, 10)
 
-        path_imatge_registrada = f'{path_carpeta_experiment}/{nx}imatge_registrada{rmse_gaussian }.png'
+        path_imatge_registrada = f'{path_carpeta_experiment}/{nx}imatge_registrada{ infomuta }.png'
         imsave(path_imatge_registrada, imatge_registrada_input)
 
 
         #if rmse + 0.1*rmse_gaussian < min:
-        if rmse_gaussian < min:
+        if -infomuta < min:
             #min = rmse + 0.1*rmse_gaussian
-            min = rmse_gaussian
+            min = -infomuta
             malla_x_optima = malla_x_mod
             malla_y_optima = malla_y_mod
 
