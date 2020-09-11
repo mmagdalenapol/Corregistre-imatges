@@ -200,10 +200,10 @@ class ElasticTransform(BaseTransform):
         residuals_gaussian_rmse = (imatge_registrada_gaussian - imatge_reference_gaussian).flatten()
         residuals_regularizacio = np.asarray([sd1, sd2])
 
-        return np.concatenate([residuals_gaussian_rmse / sum(residuals_gaussian_rmse), gamma * residuals_regularizacio])
-        # return np.concatenate([residuals_rmse/sum(residuals_rmse+residuals_gaussian_rmse),
-        # residuals_gaussian_rmse/sum(residuals_rmse+residuals_gaussian_rmse),
-        # gamma*residuals_regularizacio])
+        #return np.concatenate([residuals_gaussian_rmse / sum(residuals_gaussian_rmse), gamma * residuals_regularizacio])
+        return np.concatenate([residuals_rmse/sum(residuals_rmse+residuals_gaussian_rmse),
+         residuals_gaussian_rmse/sum(residuals_rmse+residuals_gaussian_rmse),
+         gamma*residuals_regularizacio])
 
 
     def colors_transform_nearest_neighbours(self,imatge_reference, Coordenades_desti):
@@ -218,7 +218,7 @@ class ElasticTransform(BaseTransform):
             return registered_image
 
     def montecarlo(self, malla_vector, imatge_input, imatge_reference, path_carpeta_experiment,
-                   nombre_execucions, perturbacio, gamma):
+                   nombre_execucions, perturbacio, gamma,diffstep):
         nx = self.nx
         ny = self.ny
         min = 20 #això és una cota superior molt bruta per a l'error
@@ -248,7 +248,7 @@ class ElasticTransform(BaseTransform):
             '''
             funcio_min_residus = lambda x: self.residus(x, imatge_input, imatge_reference, gamma)
             resultat = least_squares(funcio_min_residus, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
-                                     diff_step=None, gtol=1e-12, xtol=1e-13, ftol=1e-13, x_scale=1,
+                                     diff_step=diffstep, gtol=1e-12, xtol=1e-13, ftol=1e-13, x_scale=1,
                                      method='lm', verbose=2)
 
             # funcio_min_escalar = lambda x: np.sum(residus(x, imatge_reference, imatge_input, corregistre, nx, ny, sigma)**2)
@@ -311,10 +311,10 @@ class ElasticTransform(BaseTransform):
 
     def guardar_millor_imatge_registrada(self, imatge_input, imatge_reference, malla_vector,
                                          path_carpeta_experiment,
-                                         iter, perturbacio, gamma):
+                                         iter, perturbacio, gamma,diffstep):
         millors3resultats = self.montecarlo(malla_vector, imatge_input, imatge_reference,
                                             path_carpeta_experiment,
-                                            iter, perturbacio, gamma)
+                                            iter, perturbacio, gamma,diffstep)
         valors_optims = millors3resultats[0]
         parametres_optims = millors3resultats[1][0]
 
@@ -327,7 +327,7 @@ class ElasticTransform(BaseTransform):
         #                 f'malla imatge registrada optima {mx},{my}',
         #                 f'{path_carpeta_experiment}/malla_imatge_registrada{mx, my}.png')
         rmse = RMSE(imatge_reference, imatge_registrada)
-        imsave(f'{path_carpeta_experiment}/imatge_registrada_{mx, my}_{rmse}.png',
+        imsave(f'{path_carpeta_experiment}/imatge_registrada_{mx, my}_{valors_optims[0]}.png',
                imatge_registrada)
         return millor_malla_preliminar
 
