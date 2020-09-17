@@ -96,7 +96,8 @@ def info_mutua(reference_image, transformed_image,n):
     amb aquesta simple comprovació que ens dóna True veim que efectivament és millor fer-ho amb les matrius que amb el bucle
     
     '''
-    return mutual_info
+    return (pxy*log).ravel()
+    #return mutual_info
 
 
 

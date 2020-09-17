@@ -130,3 +130,41 @@ def rescalar_imatge(imatge,mida_malla,pixels_per_vertex,multichannel=True):
     scale_factor = (resolucio_ideal[0] / imatge.shape[0], resolucio_ideal[1] / imatge.shape[1])
     imatge_rescalada = rescale(imatge, scale_factor, multichannel,anti_aliasing=False)
     return imatge_rescalada
+
+#AMPLIAR LA MALLA
+def ampliacio_malla(malla_x,malla_y):
+    filx = (malla_x[0:-1, :] + malla_x[1:, :]) / 2
+    fily = (malla_y[0:-1, :] + malla_y[1:, :]) / 2
+
+    dim = [2 * malla_x.shape[0] - 1, malla_x.shape[1]]
+    fil_ampl_x = np.zeros(dim)  # afegim les files entre dues de conegudes
+    fil_ampl_y = np.zeros(dim)
+
+
+    for i in range(0, dim[0]):
+        if (i % 2 == 0): # als indexs parells deixam les files originals
+            fil_ampl_x[i] = malla_x[i // 2]
+            fil_ampl_y[i] = malla_y[i // 2]
+
+        else: # als indexs senars afegim les files interpolades
+            fil_ampl_x[i] = filx[i // 2]
+            fil_ampl_y[i] = fily[i // 2]
+
+    colx = (fil_ampl_x[:, 0:-1] + fil_ampl_x[:, 1:] ) / 2
+    coly = (fil_ampl_y[:, 0:-1] + fil_ampl_y[:, 1:] ) / 2
+
+    dim = [2 * malla_x.shape[0] - 1, 2 * malla_x.shape[1] - 1]
+    col_ampl_x = np.zeros(dim)  # afegim les columnes entre dues de conegudes
+    col_ampl_y = np.zeros(dim)
+
+    for i in range(0, dim[1]):
+        if (i % 2 == 0): #als indexs parells deixam el conegut
+            col_ampl_x[:, i] = fil_ampl_x[:, i // 2]
+            col_ampl_y[:, i] = fil_ampl_y[:, i // 2]
+
+        else: #als indexs senars afegim els valors interpolats
+            col_ampl_x[:, i] = colx[:, i // 2]
+            col_ampl_y[:, i] = coly[:, i // 2]
+
+    return col_ampl_x, col_ampl_y
+
