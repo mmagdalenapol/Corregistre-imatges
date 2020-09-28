@@ -21,7 +21,7 @@ def main():
     # Inicialitzar dades
 
 
-    for i in [1,1998,2020,106,201]:
+    for i in [1,1998,2020]:
         n=2
         mida_malla1 = [n,n]
         pixels_per_vertex = 20
@@ -56,7 +56,7 @@ def main():
         for chi in [0.08]:
              for gamma in [0.2]:
                 
-                perturbacio = 1/4
+                diff_step  = None
                 input = imatge_input_gris
                 reference = imatge_reference_gris
 
@@ -77,7 +77,7 @@ def main():
                 #millor malla 3,3
                 malla_vector1 = corregistre1.malla_inicial()
                 millor_malla_preliminar1 = corregistre1.guardar_millor_imatge_registrada( input, reference, malla_vector1,
-                                                     path_carpeta_experiment,fitxer_sortida,100, perturbacio, gamma, chi)
+                                                     path_carpeta_experiment,fitxer_sortida,100, diff_step , gamma, chi)
 
 
 
@@ -100,7 +100,7 @@ def main():
                 millor_malla_preliminar2 = corregistre2.guardar_millor_imatge_registrada(input, reference,
                                                                                          parametres_redimensionats,
                                                                                          path_carpeta_experiment,fitxer_sortida, 10,
-                                                                                         perturbacio, gamma, chi)
+                                                                                         diff_step , gamma, chi)
 
 
                 #millor resultat malla (9,9)
@@ -118,7 +118,7 @@ def main():
                 corregistre3 = ElasticTransform(mida_malla3, dim_imatge3)
 
                 millor_malla_preliminar3 = corregistre3.guardar_millor_imatge_registrada(input, reference, parametres_redimensionats2,
-                                                     path_carpeta_experiment,fitxer_sortida,5, perturbacio, gamma, chi)
+                                                     path_carpeta_experiment,fitxer_sortida,5, diff_step , gamma, chi)
 
 
 
@@ -150,7 +150,7 @@ def main():
                 fitxer_sortida.write(
                  f'''
                 Reduesc les imatges a imatges de resolució molt menor que depèn del nombre delements de la malla: {n}.\n
-                pixels entre dos punts consecutius de la malla:{pixels_per_vertex}, factor perturbacio {perturbacio}\n
+                pixels entre dos punts consecutius de la malla:{pixels_per_vertex}, factor perturbacio {1/4}\n
                 A continuació guard les imatges a escala de grisos\n
                 Calcul 100 imatges registrades a partir de 100 malles inicials aleatòries diferents de dimensió: {mida_malla1} +1 \n
                 Ara a partir de la millor imatge corregistrada de les anteriors millor la malla inicial, ara de dimensió: mida_malla2 +1    

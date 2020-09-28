@@ -19,7 +19,7 @@ from spline_registration.utils import visualize_side_by_side
 def main():
     # Inicialitzar dades
 
-    for i in [1, 1998, 2020, 106, 201]:
+    for i in [1,1998,2020,106]:
         n = 2
         mida_malla1 = [n, n]
         pixels_per_vertex = 20
@@ -36,21 +36,12 @@ def main():
         # objecte de la classe ElasticTransform amb la dimensió de la malla inicial i de la imatge reduida.
         corregistre1 = ElasticTransform_IM(mida_malla1, dim_imatge)
 
-        # IMATGES A ESCALA DE GRISOS
-        imatge_input_gris = color_a_grisos(imatge_input)
-        imatge_reference_gris = color_a_grisos(imatge_reference)
-
-        # IMATGES GAUSSIANES
-        imatge_input_gaussian = corregistre1.imatge_gaussian(imatge_input)
-        imatge_reference_gaussian = corregistre1.imatge_gaussian(imatge_reference)
-
-        imatge_input_gaussian_gris = corregistre1.imatge_gaussian(imatge_input_gris, False)
-        imatge_reference_gaussian_gris = corregistre1.imatge_gaussian(imatge_reference_gris, False)
-
+        #edges
+        edges_reference = corregistre1.edges(imatge_reference)
         # amb aquest for puc canviar fàcilment diferents valors com gamma o chi
         for chi in [0.08]:
-            for gamma in [0.2]:
-                perturbacio = 1 / 4
+            for gamma in [0.1]:
+                diff_step = 1e-2
                 input = imatge_input
                 reference = imatge_reference
 
@@ -60,13 +51,7 @@ def main():
                 path_carpeta_experiment = create_results_dir(f'{i}, gamma:{gamma},chi:{chi} ')
                 imsave(f'{path_carpeta_experiment}/00_imatge_input.png', imatge_input)
                 imsave(f'{path_carpeta_experiment}/00_imatge_reference.png', imatge_reference)
-                imsave(f'{path_carpeta_experiment}/00_imatge_input_gris.png', imatge_input_gris)
-                imsave(f'{path_carpeta_experiment}/00_imatge_reference_gris.png', imatge_reference_gris)
-                imsave(f'{path_carpeta_experiment}/00_imatge_input_gaussian.png', imatge_input_gaussian)
-                imsave(f'{path_carpeta_experiment}/00_imatge_reference_gaussian.png', imatge_reference_gaussian)
-                imsave(f'{path_carpeta_experiment}/00_imatge_input_gaussian_gris.png', imatge_input_gaussian_gris)
-                imsave(f'{path_carpeta_experiment}/00_imatge_reference_gaussian_gris.png',
-                       imatge_reference_gaussian_gris)
+                imsave(f'{path_carpeta_experiment}/00_contorn_reference.png', edges_reference)
                 fitxer_sortida = open(f'{path_carpeta_experiment}/descripcio prova.txt', "w")
 
                 # millor malla 3,3
@@ -74,8 +59,8 @@ def main():
                 millor_malla_preliminar1 = corregistre1.guardar_millor_imatge_registrada(input, reference,
                                                                                          malla_vector1,
                                                                                          path_carpeta_experiment,
-                                                                                         fitxer_sortida, 5,
-                                                                                         perturbacio, gamma, chi)
+                                                                                         fitxer_sortida, 30,
+                                                                                         diff_step, gamma, chi)
 
                 # millor resultat malla (5,5)
 
@@ -94,8 +79,8 @@ def main():
                 millor_malla_preliminar2 = corregistre2.guardar_millor_imatge_registrada(input, reference,
                                                                                          parametres_redimensionats,
                                                                                          path_carpeta_experiment,
-                                                                                         fitxer_sortida, 2,
-                                                                                         perturbacio, gamma, chi)
+                                                                                         fitxer_sortida, 5,
+                                                                                         diff_step, gamma, chi)
 
                 # millor resultat malla (9,9)
 
@@ -114,7 +99,7 @@ def main():
                 millor_malla_preliminar3 = corregistre3.guardar_millor_imatge_registrada(input, reference,
                                                                                          parametres_redimensionats2,
                                                                                          path_carpeta_experiment,
-                                                                                         fitxer_sortida, 2, perturbacio,
+                                                                                         fitxer_sortida, 2, diff_step,
                                                                                          gamma, chi)
 
                 parametres_optims = [millor_malla_preliminar3[0].ravel(), millor_malla_preliminar3[1].ravel()]
@@ -145,7 +130,7 @@ def main():
                 fitxer_sortida.write(
                     f'''
                 Reduesc les imatges a imatges de resolució molt menor que depèn del nombre delements de la malla: {n}.\n
-                pixels entre dos punts consecutius de la malla:{pixels_per_vertex}, factor perturbacio {perturbacio}\n
+                pixels entre dos punts consecutius de la malla:{pixels_per_vertex}, factor perturbacio {1/4}\n
                 A continuació guard les imatges a escala de grisos\n
                 Calcul 100 imatges registrades a partir de 100 malles inicials aleatòries diferents de dimensió: {mida_malla1} +1 \n
                 Ara a partir de la millor imatge corregistrada de les anteriors millor la malla inicial, ara de dimensió: mida_malla2 +1    
@@ -154,7 +139,7 @@ def main():
                 calcul els residus a partir de les imatges a escala de color només (només els gaussians).\n
                 la funció minimitzar té els següents paràmetres:   
                 resultat = least_squares(funcio_min_residus, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
-                                            diff_step=None, gtol=1e-12, xtol=1e-13, ftol=1e-13, x_scale=1,
+                                            diff_step={diff_step}, gtol=1e-12, xtol=1e-13, ftol=1e-13, x_scale=1,
                                             method='lm', verbose=2)
                 \n
                 {millor_malla_preliminar1}\n

@@ -4,10 +4,10 @@ from skimage.io import imread, imsave
 from spline_registration.utils import coordenades_originals, imatge_vec,color_a_grisos
 import numpy as np
 import random
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares,minimize
 from spline_registration.losses import RMSE, info_mutua
 from skimage import feature
-
+from scipy.optimize import basinhopping
 
 class BaseTransform:
 
@@ -240,21 +240,21 @@ class ElasticTransform(BaseTransform):
             return registered_image
 
     def montecarlo(self, malla_vector, imatge_input, imatge_reference, path_carpeta_experiment,fitxer_sortida,
-                   nombre_execucions, perturbacio, gamma, chi):
+                   nombre_execucions, diff_step , gamma, chi):
         nx = self.nx
         ny = self.ny
 
 
         #enlloc de quedarme tan sols amb el valor mínim i els seus corresponents paràmetre vull que em guardi
         #la informació respectiva als tres valors més petits. Per si així arrib a millors resultats.
-        valors_optims = [0, 0, 0]
+        valors_optims = [20, 20, 20]
         parametres_optims = [0, 0, 0]
-        execucio = -1
+        execucio = 1
 
         for num_exec in range(1, nombre_execucions):
 
             execucio = execucio + 1
-            factor_perturbacio = 0 if num_exec == 1 else perturbacio
+            factor_perturbacio = 0 if num_exec == 1 else 1/4
             #factor_perturbacio = perturbacio
             malla_x, malla_y, Coord_originals_x, Coord_originals_y = self.perturbar_malla_aleatoriament(
                 malla_vector, imatge_input,
@@ -269,30 +269,46 @@ class ElasticTransform(BaseTransform):
 
             '''
             funcio_min_residus = lambda x: self.residus(x, imatge_input, imatge_reference, gamma, chi)
+
             resultat = least_squares(funcio_min_residus, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
-                                     diff_step = None, gtol=1e-12, xtol=1e-13, ftol=1e-13,
+                                     diff_step = diff_step , gtol=1e-12, xtol=1e-13, ftol=1e-13,
                                      method='lm', verbose=2)
 
-            # funcio_min_escalar = lambda x: np.sum(residus(x, imatge_reference, imatge_input, corregistre, nx, ny, sigma)**2)
-            # resultat_opcio1 = minimize(funcio_min_escalar, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
+
+            #funcio_min_escalar = lambda x: np.sum(self.residus(x, imatge_input, imatge_reference, gamma, chi))
+            #resultat_opcio1 = minimize(funcio_min_escalar, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
             #                            method='L-BFGS-B',
             #                            # options={'eps': 0.002, 'gtol': 1e-14}
             #                            )
 
+
+
             # Visualitzar resultat
+            #parametres = resultat_opcio1.x
+            #val_parametres = resultat_opcio1.cost
+            #val_parametres = funcio_min_escalar(parametres)
+
+
             parametres = resultat.x
             val_parametres = resultat.cost
             residus = funcio_min_residus(parametres)
             m = self.dim_imatge[0] * self.dim_imatge[1]
 
-            residuals_rmse = residus[0:2*m]
-            sd_malla = residus[-3:-1]
-            contorn = residus[-1]
+            residuals_rmse = residus[0:2*m]*((5**3)**2)/(1-gamma-chi)
+            sum_residuals = np.sum((residuals_rmse)**2)
+            min = np.min(residuals_rmse)
+            max = np.max(residuals_rmse)
+            mean = np.mean(residuals_rmse)
 
 
-            fitxer_sortida.write(f'''
-            \n{gamma,chi}:{num_exec}:
-            residus rmse conjunts normalitzats:{residuals_rmse[34]},
+            sd_malla = residus[-3:-1]/gamma
+            contorn = residus[-1]/chi
+
+
+            fitxer_sortida.write(f'''{num_exec}:
+            \n {resultat}\n
+            \n{gamma,chi}:
+            min,max,mean dels residus colors originals,suma:{min,max,mean,sum_residuals},
             regularitzacio malla : {sd_malla},
             contorn : {contorn}\n
             ''')
@@ -324,9 +340,10 @@ class ElasticTransform(BaseTransform):
             #edges
 
             edges_registrada = self.edges(imatge_registrada_input)
-            edges_reference = self.edges(imatge_reference)
             imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_registrada_{nx}.png', edges_registrada)
-            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_reference_{nx}.png', edges_reference)
+
+
+
 
             if execucio < 3:
                 valors_optims[execucio] = val_parametres
@@ -355,10 +372,10 @@ class ElasticTransform(BaseTransform):
 
     def guardar_millor_imatge_registrada(self, imatge_input, imatge_reference, malla_vector,
                                          path_carpeta_experiment,fitxer_sortida,
-                                         iter, perturbacio, gamma, chi):
+                                         iter, diff_step , gamma, chi):
         millors3resultats = self.montecarlo(malla_vector, imatge_input, imatge_reference,
                                             path_carpeta_experiment,fitxer_sortida,
-                                            iter, perturbacio, gamma, chi)
+                                            iter, diff_step , gamma, chi)
         valors_optims = millors3resultats[0]
         parametres_optims = millors3resultats[1][0]
 
@@ -386,17 +403,15 @@ class ElasticTransform(BaseTransform):
 class ElasticTransform_IM (ElasticTransform):
 
     def edges(self,imatge):
-        sigma = (imatge.shape[0] / 10 + imatge.shape[1] / 10) * 1 / 5
-        imatge_gaussian = gaussian(color_a_grisos(imatge),sigma = sigma, multichannel = False)
-        edges = feature.canny (imatge_gaussian)
+        edges = feature.canny (color_a_grisos(imatge))
         edges = np.where(edges==True,1,0)
         return edges
 
     def residus(self,parametres, imatge_input, imatge_reference, gamma, chi):
 
         imatge_registrada = self.transformar(imatge_input,parametres)  # enviam les coord_originals de la imatge input a les coor_desti
-        #imatge_registrada_gaussian = self.imatge_gaussian(imatge_registrada)
-        #imatge_reference_gaussian = self.imatge_gaussian(imatge_reference)
+        imatge_registrada_gaussian = self.imatge_gaussian(imatge_registrada)
+        imatge_reference_gaussian = self.imatge_gaussian(imatge_reference)
 
 
         edges_registrada = self.edges(imatge_registrada)
@@ -416,33 +431,35 @@ class ElasticTransform_IM (ElasticTransform):
         sd1 = np.std(d1)
         sd2 = np.std(d2)
 
-        residuals_info_mutua = 1 - info_mutua(imatge_reference,imatge_registrada,5)
+        residuals_info_mutua_orig = (np.log(np.exp(1))/np.exp(1)- info_mutua(imatge_reference,imatge_registrada,5))/((5**3)**2)
+        residuals_info_mutua_gaus = (np.log(np.exp(1))/np.exp(1)- info_mutua(imatge_reference_gaussian,imatge_registrada_gaussian,5))
+        #residuals_info_mutua = - info_mutua(imatge_reference, imatge_registrada, 5)
 
         residuals_regularizacio = np.asarray([sd1, sd2])
-        residuals_edge = np.sum(dif_edge)
+        residuals_edge = np.sum(dif_edge)/(sum_edges_reference + sum_edges_registrada)
 
 
         beta = 1-gamma-chi
-        return np.concatenate([beta*residuals_info_mutua/np.sum(residuals_info_mutua),
+        return np.concatenate([beta*(residuals_info_mutua_orig)/(np.sum(residuals_info_mutua_orig)),
          gamma*residuals_regularizacio,
-         [chi *residuals_edge/(sum_edges_reference+ (sum_edges_registrada - sum_edges_reference))] ])
-
+         [chi *residuals_edge] ])
     def montecarlo(self, malla_vector, imatge_input, imatge_reference, path_carpeta_experiment,fitxer_sortida,
-                   nombre_execucions, perturbacio, gamma, chi):
+                   nombre_execucions, diff_step , gamma, chi):
         nx = self.nx
         ny = self.ny
 
 
         #enlloc de quedarme tan sols amb el valor mínim i els seus corresponents paràmetre vull que em guardi
         #la informació respectiva als tres valors més petits. Per si així arrib a millors resultats.
-        valors_optims = [0, 0, 0]
+        valors_optims = [20, 20, 20]
         parametres_optims = [0, 0, 0]
-        execucio = -1
+        execucio = 1
 
         for num_exec in range(1, nombre_execucions):
 
             execucio = execucio + 1
-            factor_perturbacio = 0 if num_exec == 1 else perturbacio
+            factor_perturbacio = 0 if num_exec == 1 else 1/5
+            #factor_perturbacio = perturbacio
             malla_x, malla_y, Coord_originals_x, Coord_originals_y = self.perturbar_malla_aleatoriament(
                 malla_vector, imatge_input,
                 factor_perturbacio)
@@ -456,33 +473,59 @@ class ElasticTransform_IM (ElasticTransform):
 
             '''
             funcio_min_residus = lambda x: self.residus(x, imatge_input, imatge_reference, gamma, chi)
+
             resultat = least_squares(funcio_min_residus, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
-                                     diff_step = None, gtol=1e-12, xtol=1e-13, ftol=1e-13,
+                                     diff_step = diff_step , gtol=1e-12, xtol=1e-13, ftol=1e-13,
                                      method='lm', verbose=2)
 
-            # funcio_min_escalar = lambda x: np.sum(residus(x, imatge_reference, imatge_input, corregistre, nx, ny, sigma)**2)
-            # resultat_opcio1 = minimize(funcio_min_escalar, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
+
+            #funcio_min_escalar = lambda x: np.sum(self.residus(x, imatge_input, imatge_reference, gamma, chi))
+            #resultat_opcio1 = minimize(funcio_min_escalar, x0=np.concatenate([malla_x.flatten(), malla_y.flatten()]),
             #                            method='L-BFGS-B',
             #                            # options={'eps': 0.002, 'gtol': 1e-14}
             #                            )
 
+
+
             # Visualitzar resultat
+            #parametres = resultat_opcio1.x
+            #val_parametres = resultat_opcio1.cost
+            #val_parametres = funcio_min_escalar(parametres)
+
+
             parametres = resultat.x
             val_parametres = resultat.cost
-            residus = funcio_min_residus(parametres)
-            m = self.dim_imatge[0] * self.dim_imatge[1]
 
-            sd_malla = residus[-3:-1]
-            contorn = residus[-1]
+            residus = resultat.fun
+            residus1= residus[0:-3]/(1-gamma-chi)
+            residus_IM = -1*residus1 +np.log(np.exp(1))/np.exp(1)
+
+            IM_parametres = np.sum(residus_IM)
 
 
-            fitxer_sortida.write(f'''
-            \n{gamma,chi}:{num_exec}:
+            sum_residuals_quadrats = np.sum((residus1)**2)
+            min = np.min(residus1)
+            max = np.max(residus1)
+            mean = np.mean(residus1)
+
+
+            sd_malla = residus[-3:-1]/gamma
+            contorn = residus[-1]/chi
+
+
+            fitxer_sortida.write(f'''{num_exec}:
+            \n {resultat}\n
+            \n{gamma,chi}:
+            min,max,mean dels residus colors originals,suma:{min,max,mean,sum_residuals_quadrats},
             regularitzacio malla : {sd_malla},
             contorn : {contorn}\n
             ''')
             imatge_registrada_input = self.transformar(imatge_input, parametres)
+            #rmse = RMSE(imatge_registrada_input, imatge_reference)
 
+            imatge_registrada_gaussian = self.imatge_gaussian(imatge_registrada_input)
+            imatge_reference_gaussian = self.imatge_gaussian(imatge_reference)
+            #rmse_gaussian = RMSE(imatge_registrada_gaussian, imatge_reference_gaussian)
 
             '''
             malla_x,malla_y = parametres_a_malla(parametres,nx+1,ny+1)
@@ -493,15 +536,23 @@ class ElasticTransform_IM (ElasticTransform):
 
             imsave(f'{path_carpeta_experiment}/{num_exec:02d}_imatge_registrada{nx}_{val_parametres}.png',
                    imatge_registrada_input)
+            # dif = np.abs(imatge_registrada_input- imatge_reference)
+            # imsave(f'{path_carpeta_experiment}/{num_exec:02d}_error_per_pixel{nx}.png', dif)
+
+            # dif_gaussian = np.abs(corregistre.imatge_gaussian(imatge_reference,False) -
+            #                       corregistre.imatge_gaussian(imatge_registrada_input,False))
+            # imsave(f'{path_carpeta_experiment}/{num_exec:02d}_error_per_pixel_gaussian{nx}.png', dif_gaussian)
+
+            # inicialitzar els valors i parametres_optims
 
             #edges
 
             edges_registrada = self.edges(imatge_registrada_input)
-            edges_reference = self.edges(imatge_reference)
             imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_registrada_{nx}.png', edges_registrada)
-            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_reference_{nx}.png', edges_reference)
 
-            #valors i parametres optims
+
+
+
             if execucio < 3:
                 valors_optims[execucio] = val_parametres
                 parametres_optims[execucio] = parametres
@@ -510,7 +561,7 @@ class ElasticTransform_IM (ElasticTransform):
                 m1 = list(valors_optims)
                 m2 = list(parametres_optims)
 
-                valors_optims = sorted(valors_optims)
+                valors_optims = sorted(valors_optims,reverse=False)
                 for j in range(0, 3):
                     parametres_optims[j] = m2[m1.index(valors_optims[j])]
 
@@ -527,27 +578,8 @@ class ElasticTransform_IM (ElasticTransform):
 
         return valors_optims, parametres_optims
 
-    def guardar_millor_imatge_registrada(self, imatge_input, imatge_reference, malla_vector,
-                                         path_carpeta_experiment,fitxer_sortida,
-                                         iter, perturbacio, gamma, chi):
-        millors3resultats = self.montecarlo(malla_vector, imatge_input, imatge_reference,
-                                            path_carpeta_experiment,fitxer_sortida,
-                                            iter, perturbacio, gamma, chi)
-        valors_optims = millors3resultats[0]
-        parametres_optims = millors3resultats[1][0]
 
-        mx = self.nx + 1
-        my = self.ny + 1
-        millor_malla_preliminar = self.parametres_a_malla(parametres_optims)
 
-        imatge_registrada = self.transformar(imatge_input, parametres_optims)
-        #visualitza_malla(imatge_registrada, millor_malla_preliminar[0], millor_malla_preliminar[1],
-        #                 f'malla imatge registrada optima {mx},{my}',
-        #                 f'{path_carpeta_experiment}/malla_imatge_registrada{mx, my}.png')
-        #rmse = RMSE(imatge_reference, imatge_registrada)
-        imsave(f'{path_carpeta_experiment}/imatge_registrada_{mx, my}_{valors_optims[0]}.png',
-               imatge_registrada)
-        return millor_malla_preliminar
 
 #imatge_ref, imatge_input = pass
 #model_transformar = Rescala()
