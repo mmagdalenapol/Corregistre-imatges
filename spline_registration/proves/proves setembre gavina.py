@@ -22,7 +22,7 @@ def main():
     for i in [1,1998,2020,106]:
         n = 2
         mida_malla1 = [n, n]
-        pixels_per_vertex = 20
+        pixels_per_vertex = np.asarray([20,20])
 
         # IMATGES ORIGINLAS
         imatge_input_orig = imread('seagull_input.jpg')
@@ -40,8 +40,8 @@ def main():
         edges_reference = corregistre1.edges(imatge_reference)
         # amb aquest for puc canviar fàcilment diferents valors com gamma o chi
         for chi in [0.08]:
-            for gamma in [0.1]:
-                diff_step = 1e-2
+            for diff_step  in [1e-2]:
+                gamma=0.1
                 input = imatge_input
                 reference = imatge_reference
 
@@ -59,7 +59,7 @@ def main():
                 millor_malla_preliminar1 = corregistre1.guardar_millor_imatge_registrada(input, reference,
                                                                                          malla_vector1,
                                                                                          path_carpeta_experiment,
-                                                                                         fitxer_sortida, 30,
+                                                                                         fitxer_sortida, 100,
                                                                                          diff_step, gamma, chi)
 
                 # millor resultat malla (5,5)
