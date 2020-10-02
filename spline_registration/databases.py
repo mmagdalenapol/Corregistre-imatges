@@ -118,7 +118,7 @@ def cerca_imatge_anhir(llista_de_dades, nomcarpeta, nomimatge):
     for imatge in carpeta:
         if imatge.find(nomimatge) >= 0:
             'donada una cadena de caràcters find ens cerca si hi ha una combinacio de lletres dedins ' \
-            'en cas afirmatiu dóna un nombre positiu i vol dir que hem trobat la imatge desitjada.'
+             'en cas afirmatiu dóna un nombre positiu i vol dir que hem trobat la imatge desitjada.'
 
             # print('la imatge ',  nomimatge , ' de la carpeta ' , nomcarpeta , ' es troba a la direcció: ' ,  imatge )
             return imatge

@@ -126,8 +126,8 @@ class BaseTransform:
 
     def montecarlo(self, malla_vector, imatge_input, imatge_reference, path_carpeta_experiment, fitxer_sortida,
                    nombre_execucions, i):
-        nx = self.nx[i]
-        ny = self.ny[i]
+        mx = self.nx[i] + 1
+        my = self.ny[i] + 1
         diff_step = self.diff_step
         gamma = self.gamma
         chi = self.chi
@@ -166,12 +166,12 @@ class BaseTransform:
             contorn : {contorn}\n
             ''')
             imatge_registrada_input = self.transformar(imatge_input, parametres, i)
-            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_imatge_registrada{nx,ny}_{val_parametres}.png',
+            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_imatge_registrada{mx,my}_{val_parametres}.png',
                    imatge_registrada_input)
 
             # edges
             edges_registrada = self.edges(imatge_registrada_input)
-            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_registrada_{nx,ny}.png', edges_registrada)
+            imsave(f'{path_carpeta_experiment}/{num_exec:02d}_contorn_registrada_{mx,my}.png', edges_registrada)
 
             if val_parametres < valors_optims:
                 valors_optims = val_parametres
@@ -222,7 +222,6 @@ class BaseTransform:
     def visualize_transform(self, registered_image, reference_image, parametres, path_carpeta_experiment, error):
 
         imsave(f'{path_carpeta_experiment}/imatge_reference.png', reference_image)
-
         mx, my = self.nx[-1]+1, self.ny[-1]+1
         millor_malla = self.parametres_a_malla(parametres, 2)
 
