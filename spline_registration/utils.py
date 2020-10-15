@@ -203,13 +203,15 @@ i el mateix amb les columnes interpolant els valors d'aquestes noves entrades a 
 '''
 
 
+
+
 def visualitza_malla(imatge, malla_x, malla_y, title, path_guardar=None):
     # podem fer tant la malla inicial com l'òptima
-
+    plt.axis('off')
     plt.imshow(imatge)
-    pl.plot(malla_x, malla_y, color='green')
-    pl.plot(malla_y, malla_x, color='green')
-    pl.title(title)
+    plt.scatter(malla_y,malla_x,label='skitscat', color='k', s=25,marker="o")
+    plt.title(title)
     if path_guardar:
         pl.savefig(path_guardar)
     plt.close()
+

@@ -82,7 +82,7 @@ class BaseTransform:
         ny = self.ny[i]
         delta = [int(self.dim_imatge[0] / nx) + 1, int(self.dim_imatge[1] / ny) + 1]
 
-        s, i = np.modf(x / delta[0])
+        s, i = np.modf(x / delta[0])  # i part entera del nombre x / delta[0];  s la seva part decimal
         t, j = np.modf(y / delta[1])
         i = np.minimum(np.maximum(i.astype('int'), 0), nx)
         j = np.minimum(np.maximum(j.astype('int'), 0), ny)
@@ -191,6 +191,7 @@ class BaseTransform:
         my = self.ny[i] + 1
         millor_malla_preliminar = self.parametres_a_malla(parametres_optims, i)
 
+        fitxer_sortida.write(f'\n\n\n Els millors paràmetres amb una malla {mx} per {my} són: \n {parametres_optims}\n\n\n')
         imatge_registrada = self.transformar(imatge_input, parametres_optims, i)
         imsave(f'{path_carpeta_experiment}/imatge_registrada_{mx, my}_{valors_optims}.png',
                imatge_registrada)
@@ -213,21 +214,28 @@ class BaseTransform:
                                                                         iteracions[2], 2)
         parametres_optims = np.asarray([millor_malla_preliminar[0].ravel(), millor_malla_preliminar[1].ravel()])
 
+        fitxer_sortida.write(f'\n\n\n Els millors paràmetres amb una malla 9 per 9 són: \n {parametres_optims}\n')
+
         return parametres_optims
 
     def apply_transform(self, input_image, parametres):
         imatge_registrada = self.transformar(input_image, parametres, 2)
         return imatge_registrada
 
-    def visualize_transform(self, registered_image, reference_image, parametres, path_carpeta_experiment, error):
+    def visualize_transform(self,input_image, registered_image, reference_image, parametres, path_carpeta_experiment, error):
 
         imsave(f'{path_carpeta_experiment}/imatge_reference.png', reference_image)
         mx, my = self.nx[-1]+1, self.ny[-1]+1
+        malla_original = self.parametres_a_malla(self.malla_inicial(2),2)
         millor_malla = self.parametres_a_malla(parametres, 2)
 
-        visualitza_malla(registered_image, millor_malla[0], millor_malla[1],
+        visualitza_malla(registered_image, malla_original[0], malla_original[1],
                          f'malla imatge registrada optima {mx, my}',
-                         f'{path_carpeta_experiment}/malla_imatge_registrada{mx, my}.png')
+                         f'{path_carpeta_experiment}/malla {mx, my} sobre imatge registrada.png')
+
+        visualitza_malla(input_image, millor_malla[0], millor_malla[1],
+                         f'malla imatge registrada optima {mx, my}',
+                         f'{path_carpeta_experiment}/malla {mx, my} sobre la imatge d´entrada .png')
         imsave(f'{path_carpeta_experiment}/imatge_registrada_{mx, my}_{error}.png',
                registered_image)
         im1 = Image.open(f'{path_carpeta_experiment}/imatge_reference.png').convert('L')
@@ -240,14 +248,12 @@ class BaseTransform:
 class ElasticTransform_SSD(BaseTransform):
     def __init__(self, mida_malla, dim_imatge):
         self.dim_imatge = dim_imatge
-        self.A = None
         self.nx = mida_malla[:, 0]
         self.ny = mida_malla[:, 1]
         self.diff_step = None
         self.gamma = 0.2
         self.chi = 0.08
-        self.perturbacio = 1/5
-
+        self.perturbacio = 1 / 5
     def edges(self, imatge):
         sigma = (imatge.shape[0] / 10 + imatge.shape[1] / 10) * 1 / 5
         imatge_gaussian = gaussian(imatge, sigma=sigma, multichannel=False)
@@ -271,9 +277,9 @@ class ElasticTransform_SSD(BaseTransform):
         regist_edges = self.edges(regist_img)
         ref_edges = self.edges(imatge_reference)
         sum_regist_edges = np.sum(regist_edges)
-        sum_ref_edges = np.sum(ref_edges)
         dif_edge = np.abs(regist_edges - ref_edges)
-        residuals_edge = np.sum(dif_edge)
+        sum_dif_edge = np.sum(dif_edge)
+        residuals_edge = sum_dif_edge / sum_regist_edges
 
         # calculam el factor de regularització que depen dels punts de la malla
         malla_x, malla_y = self.parametres_a_malla(parametres, i)
@@ -285,27 +291,27 @@ class ElasticTransform_SSD(BaseTransform):
         d2 = np.sqrt(np.power((mx_fila_post - malla_x[0:-1, :]), 2) + np.power((my_fila_post - malla_y[0:-1, :]), 2))
         sd1 = np.std(d1)
         sd2 = np.std(d2)
-        residuals_regularizacio = np.asarray([sd1, sd2])
+        residuals_malla = np.asarray([sd1, sd2])
 
         # calculam els residus obtinguts de comparar pixel a pixel les imatges tant originals com gaussianes
-        residuals_ssd = np.power((regist_img - imatge_reference).flatten(), 2)
-        residuals_gaus_ssd = np.power((gaus_reg_img - gaus_ref_img).flatten(), 2)
+        dif_quad = np.power((regist_img - imatge_reference).flatten(), 2)
+        dif_quad_gaus = np.power((gaus_reg_img - gaus_ref_img).flatten(), 2)
 
-        # return np.concatenate([residuals_gaus_ssd / sum(residuals_gaus_ssd), gamma * residuals_regularizacio])
-        den = sum(residuals_ssd + residuals_gaus_ssd)
+        # return np.concatenate([dif_quad_gaus / sum(dif_quad_gaus), gamma * residuals_malla])
+        den = sum(dif_quad + dif_quad_gaus)
         if den == 0:
             den = 1
 
-        return np.concatenate([beta * residuals_ssd / den,
-                               beta * residuals_gaus_ssd / den,
-                               gamma * residuals_regularizacio,
-                               [chi * residuals_edge / sum_regist_edges]])
+        residuals_dif = np.concatenate([dif_quad,dif_quad_gaus])/den
+
+        return np.concatenate([beta * residuals_dif,
+                               gamma * residuals_malla,
+                               [chi * residuals_edge ]])
 
 
 class ElasticTransform_IM (BaseTransform):
     def __init__(self, mida_malla, dim_imatge):
         self.dim_imatge = dim_imatge
-        self.A = None
         self.nx = mida_malla[:, 0]
         self.ny = mida_malla[:, 1]
         self.diff_step = None
