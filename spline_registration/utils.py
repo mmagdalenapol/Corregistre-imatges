@@ -203,8 +203,6 @@ i el mateix amb les columnes interpolant els valors d'aquestes noves entrades a 
 '''
 
 
-
-
 def visualitza_malla(imatge, malla_x, malla_y, title, path_guardar=None):
     # podem fer tant la malla inicial com l'òptima
     plt.axis('off')
