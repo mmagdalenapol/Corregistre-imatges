@@ -1,5 +1,5 @@
 
 .idea/
-spline_registration/databases/anhir
+spline_registration/databases/*
+!spline_registration/databases/anhir_test
 spline_registration/results/*
-spline_registration/proves/*
