@@ -2,5 +2,7 @@
 .idea/
 spline_registration/databases/*
 !spline_registration/databases/anhir_test
+!spline_registration/databases/ca
+!spline_registration/databases/gavina
 spline_registration/results/*
-
+spline_registration/proves/*
